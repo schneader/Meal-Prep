@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meal Prep – World Recipes</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0ece6; color: #2d2d2d; min-height: 100vh; }
+
+  header { background: white; border-bottom: 1px solid #e8e0d8; padding: 14px 28px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  header h1 { font-size: 1.25rem; font-weight: 800; color: #e60023; }
+  header p { font-size: 0.8rem; color: #999; margin-top: 2px; }
+
+  .layout { display: grid; grid-template-columns: 300px 1fr; min-height: calc(100vh - 61px); }
+
+  .sidebar { background: white; border-right: 1px solid #e8e0d8; padding: 20px 16px; overflow-y: auto; max-height: calc(100vh - 61px); position: sticky; top: 61px; }
+  .sidebar-section { margin-bottom: 18px; }
+  .sidebar-section h3 { font-size: 0.72rem; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 10px; }
+
+  .input-row { display: flex; gap: 7px; }
+  .input-row input { flex: 1; padding: 9px 13px; border: 1.5px solid #eee; border-radius: 22px; font-size: 0.86rem; outline: none; background: #f8f8f8; transition: all .2s; }
+  .input-row input:focus { border-color: #e60023; background: white; }
+  .input-row button { padding: 9px 15px; background: #e60023; color: white; border: none; border-radius: 22px; font-size: 0.83rem; cursor: pointer; font-weight: 700; }
+  .input-row button:hover { background: #c0001d; }
+
+  .cat-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+  .cat-btn { padding: 4px 11px; border: 1.5px solid #e8e8e8; background: white; border-radius: 18px; font-size: 0.76rem; cursor: pointer; transition: all .15s; color: #555; }
+  .cat-btn:hover { border-color: #e60023; color: #e60023; }
+  .cat-btn.active { background: #ffe0e4; border-color: #e60023; color: #c0001d; font-weight: 700; }
+
+  .divider { height: 1px; background: #f2f2f2; margin: 14px 0; }
+
+  .ingredients-list { display: flex; flex-wrap: wrap; gap: 5px; min-height: 32px; }
+  .ingredient-tag { display: flex; align-items: center; gap: 4px; background: #fff0f1; border: 1px solid #ffc7cc; border-radius: 18px; padding: 3px 9px; font-size: 0.77rem; color: #b00020; }
+  .ingredient-tag button { background: none; border: none; cursor: pointer; color: #c77; font-size: 0.9rem; line-height: 1; padding: 0; }
+  .ingredient-tag button:hover { color: #e60023; }
+  .empty-label { color: #ccc; font-size: 0.8rem; font-style: italic; }
+
+  .suggest-btn { width: 100%; padding: 12px; background: #e60023; color: white; border: none; border-radius: 22px; font-size: 0.93rem; font-weight: 800; cursor: pointer; margin-top: 4px; }
+  .suggest-btn:hover { background: #c0001d; }
+  .suggest-btn:disabled { background: #e0e0e0; color: #bbb; cursor: not-allowed; }
+  .clear-btn { width: 100%; background: none; border: none; color: #ccc; font-size: 0.78rem; cursor: pointer; margin-top: 6px; }
+  .clear-btn:hover { color: #e60023; text-decoration: underline; }
+  .restore-btn { width: 100%; background: none; border: 1px solid #e8e8e8; border-radius: 18px; color: #888; font-size: 0.78rem; cursor: pointer; margin-top: 6px; padding: 6px; }
+  .restore-btn:hover { border-color: #e60023; color: #e60023; }
+
+  .cuisine-row { padding: 12px 20px; background: white; border-bottom: 1px solid #eee; display: flex; gap: 8px; flex-wrap: wrap; }
+  .cuisine-pill { padding: 6px 16px; border: 1.5px solid #e0e0e0; background: white; border-radius: 22px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all .15s; color: #555; white-space: nowrap; }
+  .cuisine-pill:hover { border-color: #e60023; color: #e60023; }
+  .cuisine-pill.active { background: #e60023; border-color: #e60023; color: white; }
+
+  .main { display: flex; flex-direction: column; }
+  .main-body { padding: 20px; flex: 1; }
+
+  .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+  .top-bar h2 { font-size: 0.95rem; font-weight: 700; color: #555; }
+  .filter-pills { display: flex; gap: 7px; }
+  .filter-pill { padding: 6px 14px; border: 1.5px solid #ddd; background: white; border-radius: 20px; font-size: 0.78rem; cursor: pointer; font-weight: 600; color: #555; transition: all .15s; }
+  .filter-pill.active { background: #111; border-color: #111; color: white; }
+
+  .pin-grid { columns: 3 260px; column-gap: 14px; }
+  @media (max-width: 900px) { .pin-grid { columns: 2 220px; } }
+  @media (max-width: 600px) { .pin-grid { columns: 1; } .layout { grid-template-columns: 1fr; } }
+
+  /* Pin card */
+  .pin-card { break-inside: avoid; margin-bottom: 14px; background: white; border-radius: 14px; overflow: hidden; cursor: pointer; transition: transform .2s, box-shadow .2s; box-shadow: 0 1px 4px rgba(0,0,0,0.09); position: relative; }
+  .pin-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.13); }
+
+  .pin-img-wrap { position: relative; overflow: hidden; background: #e8e3db; }
+  .pin-img-wrap img { width: 100%; display: block; object-fit: cover; transition: transform .3s; }
+  .pin-card:hover .pin-img-wrap img { transform: scale(1.03); }
+
+  /* Hover action bar that slides up over the image */
+  .card-actions { position: absolute; top: 0; left: 0; right: 0; padding: 10px; display: flex; justify-content: space-between; align-items: flex-start; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .pin-card:hover .card-actions { opacity: 1; pointer-events: all; }
+
+  .action-btn { border: none; border-radius: 50%; width: 32px; height: 32px; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.25); transition: transform .15s; }
+  .action-btn:hover { transform: scale(1.1); }
+  .btn-delete { background: #ff3b30; color: white; }
+  .btn-img { background: white; color: #333; font-size: 0.8rem; }
+
+  /* No-image placeholder */
+  .img-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f0ece6; color: #bbb; font-size: 0.8rem; gap: 6px; cursor: pointer; }
+  .img-placeholder .ph-icon { font-size: 1.8rem; }
+
+  .match-ribbon { position: absolute; bottom: 10px; left: 10px; padding: 3px 9px; border-radius: 18px; font-size: 0.7rem; font-weight: 800; backdrop-filter: blur(6px); }
+  .ribbon-high { background: rgba(34,197,94,0.9); color: white; }
+  .ribbon-med { background: rgba(234,179,8,0.9); color: white; }
+  .ribbon-low { background: rgba(239,68,68,0.85); color: white; }
+  .cuisine-flag { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.55); color: white; border-radius: 12px; padding: 3px 9px; font-size: 0.7rem; font-weight: 700; backdrop-filter: blur(4px); }
+
+  .pin-body { padding: 10px 12px 12px; }
+  .pin-title { font-size: 0.88rem; font-weight: 700; color: #111; margin-bottom: 4px; line-height: 1.3; }
+  .pin-meta { display: flex; gap: 10px; font-size: 0.73rem; color: #999; margin-bottom: 6px; }
+  .pin-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+  .have-tag { background: #f0fdf4; color: #15803d; border-radius: 4px; padding: 2px 6px; font-size: 0.69rem; font-weight: 600; }
+  .need-tag { background: #fefce8; color: #a16207; border-radius: 4px; padding: 2px 6px; font-size: 0.69rem; font-weight: 600; }
+
+  /* Image editor panel (slides up from bottom of image) */
+  .img-editor { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.88); backdrop-filter: blur(8px); padding: 12px; display: none; z-index: 10; }
+  .img-editor.open { display: block; }
+  .img-editor label { display: block; color: #ddd; font-size: 0.72rem; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+  .img-editor input { width: 100%; padding: 7px 10px; border: 1.5px solid #555; border-radius: 8px; background: #222; color: white; font-size: 0.82rem; outline: none; margin-bottom: 8px; }
+  .img-editor input:focus { border-color: #e60023; }
+  .img-editor-btns { display: flex; gap: 6px; }
+  .img-editor-btns button { flex: 1; padding: 7px; border: none; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+  .btn-save-img { background: #e60023; color: white; }
+  .btn-search-img { background: #444; color: #ddd; }
+  .btn-cancel-img { background: #333; color: #aaa; }
+
+  /* Recipe detail modal */
+  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.72); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+  .modal-bg.open { display: flex; }
+  .modal { background: white; border-radius: 20px; max-width: 740px; width: 100%; max-height: 90vh; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 600px) { .modal { grid-template-columns: 1fr; } }
+  .modal-img { position: relative; background: #e8e3db; }
+  .modal-img img { width: 100%; height: 100%; object-fit: cover; border-radius: 20px 0 0 20px; min-height: 280px; display: block; }
+  @media (max-width: 600px) { .modal-img img { border-radius: 20px 20px 0 0; min-height: 200px; } }
+  .modal-content { padding: 26px; overflow-y: auto; }
+  .modal-close { position: absolute; top: 10px; right: 10px; background: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 1rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; z-index: 1; }
+  .modal-cuisine-tag { display: inline-block; padding: 3px 11px; border-radius: 14px; font-size: 0.72rem; font-weight: 800; background: #f3f3f3; color: #555; margin-bottom: 8px; }
+  .modal-title { font-size: 1.15rem; font-weight: 800; color: #111; margin-bottom: 6px; }
+  .modal-meta { display: flex; gap: 14px; font-size: 0.79rem; color: #999; margin-bottom: 12px; }
+  .modal-match { display: inline-block; padding: 3px 11px; border-radius: 18px; font-size: 0.75rem; font-weight: 700; margin-bottom: 14px; }
+  .modal h4 { font-size: 0.74rem; font-weight: 800; color: #bbb; text-transform: uppercase; letter-spacing: .7px; margin-bottom: 7px; margin-top: 14px; }
+  .modal ul { padding-left: 15px; font-size: 0.85rem; line-height: 1.8; color: #444; }
+  .modal ol { padding-left: 15px; font-size: 0.85rem; line-height: 1.9; color: #444; }
+
+  .empty-state { text-align: center; padding: 80px 20px; color: #ccc; }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 14px; }
+  .empty-state p { font-size: 0.9rem; line-height: 1.6; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🌍 Meal Prep</h1>
+    <p>Add what's in your fridge → find recipes from around the world</p>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <h3>Add Ingredients</h3>
+      <div class="input-row">
+        <input type="text" id="ingredientInput" placeholder="e.g. chicken, rice…" />
+        <button onclick="addIngredient()">Add</button>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <h3>Quick Add</h3>
+      <div class="cat-grid" id="quickAdds"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="sidebar-section">
+      <h3>My Fridge & Pantry</h3>
+      <div class="ingredients-list" id="ingredientsList">
+        <span class="empty-label">Nothing added yet</span>
+      </div>
+    </div>
+    <button class="suggest-btn" id="suggestBtn" onclick="suggestRecipes()" disabled>🍳 Find Recipes</button>
+    <button class="clear-btn" onclick="clearAll()">Clear all ingredients</button>
+    <button class="restore-btn" id="restoreBtn" onclick="restoreDeleted()" style="display:none">↩ Restore deleted recipes</button>
+  </aside>
+
+  <div class="main">
+    <div class="cuisine-row" id="cuisineRow" style="display:none">
+      <button class="cuisine-pill active" onclick="setCuisine('All',this)">🌍 All</button>
+      <button class="cuisine-pill" onclick="setCuisine('African',this)">🌍 African</button>
+      <button class="cuisine-pill" onclick="setCuisine('Asian',this)">🥢 Asian</button>
+      <button class="cuisine-pill" onclick="setCuisine('Middle Eastern',this)">🌙 Middle Eastern</button>
+      <button class="cuisine-pill" onclick="setCuisine('Caribbean',this)">🏝️ Caribbean</button>
+      <button class="cuisine-pill" onclick="setCuisine('Latin American',this)">🌶️ Latin American</button>
+      <button class="cuisine-pill" onclick="setCuisine('American',this)">🦅 American</button>
+      <button class="cuisine-pill" onclick="setCuisine('Mediterranean',this)">🫒 Mediterranean</button>
+      <button class="cuisine-pill" onclick="setCuisine('European',this)">🍷 European</button>
+    </div>
+    <div class="main-body">
+      <div class="top-bar">
+        <h2 id="resultsLabel">Add ingredients to get started</h2>
+        <div class="filter-pills" id="filterPills" style="display:none">
+          <button class="filter-pill active" onclick="setFilter('all',this)">All</button>
+          <button class="filter-pill" onclick="setFilter('high',this)">✅ Ready to cook</button>
+          <button class="filter-pill" onclick="setFilter('med',this)">🟡 Almost there</button>
+        </div>
+      </div>
+      <div class="pin-grid" id="pinGrid">
+        <div class="empty-state"><div class="icon">🌍</div><p>Add ingredients on the left,<br>then tap <strong>Find Recipes</strong>.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recipe detail modal -->
+<div class="modal-bg" id="modalBg" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-img">
+      <img id="modalImg" src="" alt="" onerror="this.style.display='none'" />
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-content">
+      <div class="modal-cuisine-tag" id="modalCuisine"></div>
+      <div id="modalMatchBadge" class="modal-match"></div>
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-meta" id="modalMeta"></div>
+      <h4>Ingredients</h4>
+      <ul id="modalIngredients"></ul>
+      <h4>Instructions</h4>
+      <ol id="modalSteps"></ol>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── CONFIRMED IMAGE URLS ────────────────────────────────────────────────────
+// TheMealDB (verified live) and Wikimedia Commons (Special:FilePath redirects).
+// Any image that 404s gracefully falls back to a "click to add" placeholder.
+const M = "https://www.themealdb.com/images/media/meals/";
+const W = "https://upload.wikimedia.org/wikipedia/commons/thumb/";
+
+const RECIPES = [
+  // AFRICAN
+  { name:"Jollof Rice", cuisine:"African", time:"50 min", servings:6, difficulty:"Medium",
+    img: W+"b/b3/Jollof_rice_on_plate.jpg/640px-Jollof_rice_on_plate.jpg",
+    ingredients:["rice","tomatoes","onion","bell pepper","chicken","olive oil"],
+    allIngredients:["2 cups long-grain rice","4 tomatoes blended","2 bell peppers blended","1 onion diced","500g chicken","3 tbsp tomato paste","2 tbsp oil","Bouillon, thyme, bay leaves"],
+    steps:["Blend tomatoes, bell peppers, and half the onion into a purée.","Brown chicken in oil, set aside. Sauté remaining onion.","Fry blended mix 15 min until oil floats to top.","Add 3 cups water, bouillon, seasonings, and chicken.","Add washed rice, cover tightly, cook on low 25 min."] },
+
+  { name:"Shakshuka", cuisine:"African", time:"25 min", servings:3, difficulty:"Easy",
+    img: M+"g373701551450225.jpg",
+    ingredients:["eggs","tomatoes","onion","bell pepper","garlic","olive oil","cumin"],
+    allIngredients:["4–5 eggs","2 cans crushed tomatoes","1 bell pepper diced","1 onion","3 cloves garlic","1 tsp cumin","1 tsp paprika","Chili flakes","2 tbsp olive oil"],
+    steps:["Sauté onion and bell pepper in olive oil 5 min.","Add garlic, cumin, paprika, chili — cook 1 min.","Pour in tomatoes, simmer 10 min until thick.","Make wells, crack eggs in. Cover and cook 5–7 min.","Serve with crusty bread."] },
+
+  { name:"Moroccan Chicken Tagine", cuisine:"African", time:"60 min", servings:4, difficulty:"Medium",
+    img: W+"4/4d/Chicken_Tagine_With_Lemon_and_Olives.jpg/640px-Chicken_Tagine_With_Lemon_and_Olives.jpg",
+    ingredients:["chicken","onion","garlic","lemon","olive oil","cumin"],
+    allIngredients:["6 chicken thighs","1 large onion grated","4 cloves garlic","1 lemon","1 tsp cumin","1 tsp turmeric","1 tsp ginger","½ tsp cinnamon","Green olives","2 tbsp olive oil","Cilantro"],
+    steps:["Marinate chicken with garlic, spices, and oil 30 min.","Brown chicken, remove. Sauté onion until golden.","Return chicken with 1 cup water, lemon, and olives.","Cover and simmer 45 min until very tender.","Finish with cilantro. Serve with couscous."] },
+
+  { name:"Egusi Soup", cuisine:"African", time:"50 min", servings:4, difficulty:"Medium",
+    img: W+"4/45/Egusi_soup.jpg/640px-Egusi_soup.jpg",
+    ingredients:["ground beef","spinach","tomatoes","onion","olive oil","chili"],
+    allIngredients:["300g ground beef","1 cup egusi (ground melon/pumpkin seeds)","2 tomatoes blended","1 cup spinach","1 onion","2 chili peppers","3 tbsp palm oil or olive oil","Seasoning cubes"],
+    steps:["Fry blended tomatoes and chili in oil 10 min.","Add meat, seasoning, ½ cup water. Simmer 15 min.","Mix egusi with water into paste, drop spoonfuls into pot.","Stir gently, cook 15 min until egusi is done.","Add spinach, cook 3 min. Serve with fufu or rice."] },
+
+  { name:"Suya Skewers", cuisine:"African", time:"30 min", servings:4, difficulty:"Easy",
+    img: W+"1/1b/Suya.jpg/640px-Suya.jpg",
+    ingredients:["ground beef","onion","garlic","ginger","chili","olive oil"],
+    allIngredients:["500g beef thinly sliced","2 tbsp peanut butter","1 tsp ground ginger","1 tsp garlic powder","1 tsp paprika","1 tsp cayenne","1 tsp onion powder","Salt"],
+    steps:["Mix peanut butter with all spices and salt.","Coat beef in spice mix; marinate 20 min.","Thread onto skewers.","Grill or broil 3–4 min per side until charred.","Serve with sliced onions and tomatoes."] },
+
+  { name:"Groundnut Soup", cuisine:"African", time:"55 min", servings:4, difficulty:"Medium",
+    img: W+"e/e1/Ghana_groundnut_soup.jpg/640px-Ghana_groundnut_soup.jpg",
+    ingredients:["chicken","tomatoes","onion","garlic","olive oil","spinach"],
+    allIngredients:["1kg chicken pieces","½ cup peanut butter","2 tomatoes blended","1 onion","3 cloves garlic","1 tbsp tomato paste","Seasoning cubes","Chili to taste"],
+    steps:["Season and brown chicken in oil. Set aside.","Fry blended tomatoes, onion, garlic 10 min.","Add tomato paste, cook 3 min.","Thin peanut butter with warm water, add with chicken.","Simmer 30 min until thick. Serve with rice."] },
+
+  // ASIAN
+  { name:"Chicken Tikka Masala", cuisine:"Asian", time:"45 min", servings:4, difficulty:"Medium",
+    img: W+"3/3e/Chicken_tikka_masala.jpg/640px-Chicken_tikka_masala.jpg",
+    ingredients:["chicken","tomatoes","onion","garlic","ginger","butter","cumin"],
+    allIngredients:["600g chicken cubed","1 can crushed tomatoes","1 onion diced","4 cloves garlic","1 tbsp ginger","2 tbsp butter","1 cup cream or coconut milk","2 tsp garam masala","1 tsp cumin","1 tsp turmeric","1 tsp paprika"],
+    steps:["Marinate chicken in yogurt and half the spices 20 min. Broil until charred.","Sauté onion in butter 6 min. Add garlic, ginger, remaining spices.","Add tomatoes, simmer 10 min. Blend if desired.","Add cream and chicken, simmer 10 min.","Serve with naan or rice."] },
+
+  { name:"Pad Thai", cuisine:"Asian", time:"25 min", servings:2, difficulty:"Easy",
+    img: M+"rg9ze01763479093.jpg",
+    ingredients:["eggs","shrimp","garlic","onion","lime","soy sauce"],
+    allIngredients:["200g rice noodles","200g shrimp or chicken","2 eggs","3 cloves garlic","2 tbsp fish sauce","1 tbsp soy sauce","1 tbsp tamarind or lime juice","1 tbsp sugar","Bean sprouts","Spring onions","Peanuts","Lime"],
+    steps:["Soak noodles in warm water 20 min, drain.","Stir-fry shrimp, push aside and scramble eggs.","Add garlic, noodles, and sauce.","Toss over high heat 2 min.","Top with bean sprouts, peanuts, and lime."] },
+
+  { name:"Bibimbap", cuisine:"Asian", time:"40 min", servings:2, difficulty:"Medium",
+    img: W+"4/44/Dolsot-bibimbap.jpg/640px-Dolsot-bibimbap.jpg",
+    ingredients:["rice","eggs","spinach","carrots","garlic","soy sauce"],
+    allIngredients:["2 cups cooked rice","2 eggs","1 cup spinach","1 carrot julienned","100g mushrooms","100g ground beef (optional)","2 cloves garlic","2 tbsp soy sauce","1 tbsp sesame oil","1 tbsp gochujang"],
+    steps:["Cook rice and keep warm.","Sauté each vegetable separately with garlic, sesame oil, soy sauce.","Brown ground beef with soy sauce if using.","Fry eggs sunny-side up.","Arrange rice in bowls, top with everything and gochujang. Mix before eating."] },
+
+  { name:"Thai Green Curry", cuisine:"Asian", time:"30 min", servings:3, difficulty:"Easy",
+    img: M+"sstssx1487349585.jpg",
+    ingredients:["chicken","coconut milk","bell pepper","spinach","garlic","ginger","lime"],
+    allIngredients:["500g chicken","1 can coconut milk","1 bell pepper sliced","2 cups spinach","2 tbsp green curry paste","2 cloves garlic","1 tbsp ginger","1 tbsp fish sauce","1 tsp sugar","Basil, lime, rice"],
+    steps:["Fry curry paste in oil 1 min until fragrant.","Add chicken, cook 5 min.","Pour in coconut milk, add fish sauce and sugar.","Add bell pepper, simmer 10 min.","Stir in spinach and basil, squeeze lime, serve over rice."] },
+
+  { name:"Miso Ramen", cuisine:"Asian", time:"35 min", servings:2, difficulty:"Easy",
+    img: W+"2/2e/Miso_Ramen_%28%E5%91%B3%E5%99%8C%E3%83%A9%E3%83%BC%E3%83%A1%E3%83%B3%29_by_jetalone_in_Hakata%2C_Fukuoka.jpg/640px-Miso_Ramen_%28%E5%91%B3%E5%99%8C%E3%83%A9%E3%83%BC%E3%83%A1%E3%83%B3%29_by_jetalone_in_Hakata%2C_Fukuoka.jpg",
+    ingredients:["eggs","garlic","ginger","soy sauce","spinach","onion"],
+    allIngredients:["2 portions ramen noodles","4 cups broth","3 tbsp miso paste","1 tbsp soy sauce","2 eggs","2 cloves garlic","1 tsp ginger","Spring onions, corn, sesame oil"],
+    steps:["Soft-boil eggs 6–7 min, cool in ice bath, peel.","Sauté garlic and ginger in oil 1 min.","Add broth, simmer. Whisk in miso and soy sauce.","Cook noodles separately, divide into bowls.","Ladle hot broth over, top with halved egg and toppings."] },
+
+  { name:"Korean Dakgalbi", cuisine:"Asian", time:"30 min", servings:3, difficulty:"Easy",
+    img: W+"6/6c/Dak_galbi.jpg/640px-Dak_galbi.jpg",
+    ingredients:["chicken","garlic","ginger","onion","bell pepper","soy sauce","chili"],
+    allIngredients:["600g chicken thighs cubed","2 tbsp gochujang","2 tbsp soy sauce","1 tbsp sugar","3 cloves garlic","1 tsp ginger","1 onion sliced","1 bell pepper","1 cup cabbage","Sesame oil","Rice"],
+    steps:["Mix gochujang, soy sauce, sugar, garlic, ginger.","Marinate chicken 15 min.","Stir-fry chicken on high heat until cooked, 7 min.","Add onion, bell pepper, cabbage; toss 3 min.","Drizzle sesame oil and serve with rice."] },
+
+  { name:"Dal Tadka", cuisine:"Asian", time:"40 min", servings:4, difficulty:"Easy",
+    img: M+"wuxrtu1483564410.jpg",
+    ingredients:["lentils","tomatoes","onion","garlic","ginger","butter","cumin","chili"],
+    allIngredients:["1 cup red lentils","2 tomatoes diced","1 onion diced","4 cloves garlic","1 tsp ginger","2 tbsp butter or ghee","1 tsp cumin seeds","1 tsp turmeric","1 tsp garam masala","Dried chilis","Salt, cilantro"],
+    steps:["Boil lentils in 3 cups water with turmeric 20–25 min. Mash slightly.","Heat butter, fry cumin seeds; add chili, garlic, ginger.","Add onion, cook golden. Add tomatoes, cook 5 min.","Pour tadka into lentils, simmer 5 min.","Finish with garam masala and cilantro."] },
+
+  { name:"Teriyaki Salmon", cuisine:"Asian", time:"20 min", servings:2, difficulty:"Easy",
+    img: W+"8/8e/Salmon_teriyaki.jpg/640px-Salmon_teriyaki.jpg",
+    ingredients:["salmon","soy sauce","garlic","ginger","lime"],
+    allIngredients:["2 salmon fillets","3 tbsp soy sauce","1 tbsp honey","1 clove garlic minced","½ tsp ginger","1 tsp sesame oil","Sesame seeds, spring onions","Rice"],
+    steps:["Mix soy sauce, honey, garlic, ginger, sesame oil.","Marinate salmon 10 min.","Heat pan, cook salmon 4 min per side.","Pour remaining marinade in pan, caramelise 1 min.","Serve over rice, topped with sesame seeds."] },
+
+  { name:"Vegetable Fried Rice", cuisine:"Asian", time:"20 min", servings:3, difficulty:"Easy",
+    img: M+"wuyd2h1765655837.jpg",
+    ingredients:["rice","eggs","garlic","onion","carrots","soy sauce"],
+    allIngredients:["3 cups day-old cooked rice","2 eggs","1 cup mixed veg (peas, corn, carrots)","3 cloves garlic","2 spring onions","3 tbsp soy sauce","1 tbsp sesame oil","Oil"],
+    steps:["Heat oil in wok over very high heat.","Scramble eggs, push to side.","Add garlic and veg, stir-fry 2 min.","Add rice, break clumps, toss vigorously.","Add soy sauce and sesame oil, toss 2 min."] },
+
+  { name:"Filipino Chicken Adobo", cuisine:"Asian", time:"50 min", servings:4, difficulty:"Easy",
+    img: W+"5/5b/Chicken_adobo.jpg/640px-Chicken_adobo.jpg",
+    ingredients:["chicken","garlic","onion","soy sauce","olive oil"],
+    allIngredients:["1kg chicken thighs","6 cloves garlic crushed","1 onion sliced","½ cup soy sauce","½ cup white vinegar","1 tsp black pepper","2 bay leaves","1 tbsp oil","Rice"],
+    steps:["Marinate chicken with soy sauce, vinegar, garlic, bay leaves, pepper 30 min.","Brown chicken on all sides in oil.","Pour in marinade and ½ cup water. Bring to boil.","Reduce heat, simmer 30 min until sauce thickens.","Serve over steamed rice."] },
+
+  { name:"Butter Chicken", cuisine:"Asian", time:"50 min", servings:4, difficulty:"Medium",
+    img: W+"1/1b/Butter_Chicken.jpg/640px-Butter_Chicken.jpg",
+    ingredients:["chicken","tomatoes","butter","onion","garlic","ginger","cumin"],
+    allIngredients:["600g chicken thighs","1 can crushed tomatoes","3 tbsp butter","1 onion diced","4 cloves garlic","1 tbsp ginger","1 cup heavy cream","2 tsp garam masala","1 tsp cumin","1 tsp paprika"],
+    steps:["Marinate chicken in yogurt and spices 30 min. Grill until charred.","Sauté onion in butter until golden. Add garlic, ginger, spices.","Add tomatoes, simmer 15 min. Blend smooth.","Return to pan, add cream, simmer 10 min.","Add chicken, serve with naan."] },
+
+  // MIDDLE EASTERN
+  { name:"Lamb Kebabs", cuisine:"Middle Eastern", time:"30 min", servings:4, difficulty:"Easy",
+    img: W+"4/44/Luleh-kebab.jpg/640px-Luleh-kebab.jpg",
+    ingredients:["lamb","onion","garlic","cumin","olive oil"],
+    allIngredients:["500g ground lamb","1 onion grated","3 cloves garlic minced","1 tsp cumin","1 tsp coriander","½ tsp cinnamon","½ tsp paprika","Salt & pepper","Parsley","Flatbread and yogurt"],
+    steps:["Combine lamb with onion, garlic, and all spices.","Shape onto skewers into long sausages.","Grill or broil 3–4 min per side until charred.","Rest 5 min.","Serve in flatbread with hummus and yogurt."] },
+
+  { name:"Hummus", cuisine:"Middle Eastern", time:"15 min", servings:6, difficulty:"Easy",
+    img: M+"gpon5u1763801180.jpg",
+    ingredients:["chickpeas","garlic","lemon","olive oil","cumin"],
+    allIngredients:["1 can chickpeas (drained)","3 tbsp tahini","2 cloves garlic","Juice of 1 lemon","3 tbsp olive oil","½ tsp cumin","Salt","Ice water","Paprika, parsley to garnish"],
+    steps:["Blend tahini and lemon juice 1 min until fluffy.","Add garlic, cumin, blend. Add chickpeas and blend.","Add ice water while blending until silky smooth.","Adjust salt and lemon.","Spread in bowl, drizzle olive oil, sprinkle paprika."] },
+
+  { name:"Falafel", cuisine:"Middle Eastern", time:"45 min", servings:4, difficulty:"Medium",
+    img: M+"u5e9qq1763795441.jpg",
+    ingredients:["chickpeas","garlic","onion","cumin","olive oil"],
+    allIngredients:["1 cup dried chickpeas (soaked overnight — NOT canned)","½ onion chopped","4 cloves garlic","2 tsp cumin","1 tsp coriander","Parsley and cilantro","Salt","Oil for frying","Pita, tahini, veg to serve"],
+    steps:["Drain soaked chickpeas — never use canned.","Pulse with onion, garlic, herbs, and spices until coarse.","Add salt, refrigerate 30 min.","Form into balls/patties. Fry at 375°F 3–4 min until dark golden.","Serve in pita with tahini sauce."] },
+
+  { name:"Lebanese Lentil Soup", cuisine:"Middle Eastern", time:"40 min", servings:4, difficulty:"Easy",
+    img: W+"3/38/Lentil_soup_in_a_bowl.jpg/640px-Lentil_soup_in_a_bowl.jpg",
+    ingredients:["lentils","onion","garlic","cumin","olive oil","lemon"],
+    allIngredients:["1½ cups red lentils","1 large onion diced","4 cloves garlic","1 tsp cumin","1 tsp turmeric","5 cups broth","Juice of 1 lemon","3 tbsp olive oil","Salt, cilantro"],
+    steps:["Sauté onion in olive oil until deep golden, 10–12 min.","Add garlic, cumin, turmeric — cook 1 min.","Add lentils and broth, bring to boil.","Simmer 20 min until completely soft.","Blend partially. Add lemon juice. Top with fried onions."] },
+
+  { name:"Shawarma Wraps", cuisine:"Middle Eastern", time:"35 min", servings:4, difficulty:"Easy",
+    img: W+"6/6a/Shawarma_wrap.jpg/640px-Shawarma_wrap.jpg",
+    ingredients:["chicken","garlic","lemon","olive oil","onion","cumin"],
+    allIngredients:["600g chicken thighs","3 cloves garlic","Juice of 1 lemon","2 tbsp olive oil","1 tsp cumin","1 tsp turmeric","1 tsp paprika","½ tsp cinnamon","Flatbread","Tahini, tomatoes, parsley"],
+    steps:["Mix garlic, lemon, oil, and all spices.","Coat chicken and marinate 30+ min.","Grill or pan-fry on high heat until charred.","Slice thinly.","Serve in flatbread with tahini, tomatoes, and parsley."] },
+
+  { name:"Mansaf", cuisine:"Middle Eastern", time:"90 min", servings:6, difficulty:"Hard",
+    img: W+"f/f4/Mansaf_01.jpg/640px-Mansaf_01.jpg",
+    ingredients:["lamb","rice","onion","butter","cumin"],
+    allIngredients:["1kg lamb on the bone","3 cups long-grain rice","1 large onion","3 tbsp butter","2 cups plain yogurt","1 tsp turmeric","1 tsp cumin","Toasted almonds and pine nuts","Salt & pepper","Parsley"],
+    steps:["Brown lamb in butter with onion, season well.","Add water to cover, simmer 60–70 min until tender.","Cook rice in lamb broth with turmeric.","Warm yogurt gently — do not boil — whisk smooth.","Assemble: rice, lamb on top, pour yogurt sauce over, garnish with nuts."] },
+
+  // CARIBBEAN
+  { name:"Jerk Chicken", cuisine:"Caribbean", time:"50 min", servings:4, difficulty:"Medium",
+    img: M+"tytyxu1515363282.jpg",
+    ingredients:["chicken","garlic","onion","lime","olive oil","chili","soy sauce"],
+    allIngredients:["1kg chicken thighs","4 cloves garlic","1 bunch spring onions","2 scotch bonnets or jalapeños","Juice of 2 limes","2 tbsp soy sauce","1 tbsp oil","1 tsp allspice","1 tsp thyme","1 tsp cinnamon","1 tsp ginger"],
+    steps:["Blend garlic, spring onions, peppers, lime, soy, oil, and all spices.","Score chicken, marinate minimum 2 hours.","Grill 15–18 min per side, or bake 400°F 45 min.","Rest 5 min.","Serve with rice & peas and fried plantain."] },
+
+  { name:"Caribbean Rice & Peas", cuisine:"Caribbean", time:"35 min", servings:4, difficulty:"Easy",
+    img: W+"b/b3/Rice-and-peas.jpg/640px-Rice-and-peas.jpg",
+    ingredients:["rice","canned beans","coconut milk","garlic","onion"],
+    allIngredients:["2 cups long-grain rice","1 can kidney beans drained","1 can coconut milk","2 cups water","3 cloves garlic","½ onion diced","1 tsp thyme","1 spring onion knotted","Salt & pepper"],
+    steps:["Sauté onion and garlic in oil 2 min.","Add coconut milk, water, beans, thyme, spring onion, seasoning.","Bring to boil, add washed rice. Stir once.","Reduce to lowest heat, cover tightly.","Cook 20–22 min until fluffy."] },
+
+  { name:"Trinidadian Curry Channa", cuisine:"Caribbean", time:"40 min", servings:4, difficulty:"Easy",
+    img: W+"1/1b/Channa_masala.jpg/640px-Channa_masala.jpg",
+    ingredients:["chickpeas","tomatoes","onion","garlic","cumin","potatoes"],
+    allIngredients:["2 cans chickpeas drained","2 potatoes cubed","1 tomato diced","1 onion diced","4 cloves garlic","2 tbsp curry powder","1 tsp cumin","1 tsp turmeric","2 tbsp oil","Salt, hot pepper"],
+    steps:["Heat oil, add onion 5 min. Add garlic and curry powder, toast 1 min.","Add tomatoes, cook 3 min.","Add chickpeas, potatoes, and 1 cup water.","Cover and simmer 20 min until potatoes are tender.","Serve with roti or rice."] },
+
+  { name:"Fried Sweet Plantain", cuisine:"Caribbean", time:"15 min", servings:2, difficulty:"Easy",
+    img: W+"3/38/Platano_maduro_frito.jpg/640px-Platano_maduro_frito.jpg",
+    ingredients:["plantain","olive oil"],
+    allIngredients:["2 ripe (yellow-black) plantains","Oil for frying","Salt","Optional: cinnamon sugar"],
+    steps:["Peel plantains and slice diagonally into ½-inch pieces.","Heat ½ inch of oil to medium heat.","Fry 2–3 min per side until deep golden and caramelised.","Drain on paper towel.","Sprinkle with salt and serve."] },
+
+  { name:"Caribbean Oxtail Stew", cuisine:"Caribbean", time:"120 min", servings:4, difficulty:"Hard",
+    img: M+"1520083578.jpg",
+    ingredients:["ground beef","onion","garlic","soy sauce","tomatoes","canned beans","olive oil"],
+    allIngredients:["1kg oxtail or beef short ribs","1 can butter beans","1 onion diced","4 cloves garlic","2 tbsp soy sauce","1 tbsp tomato paste","1 scotch bonnet pepper","1 tsp allspice","Thyme, bay leaves"],
+    steps:["Season oxtail with soy sauce, allspice, salt, pepper. Marinate overnight.","Brown oxtail in batches over high heat.","Add onion, garlic, tomato paste, and herbs.","Add water to cover; pressure cook 45 min or simmer 2 hours until tender.","Add butter beans, simmer 15 min. Serve with white rice."] },
+
+  // LATIN AMERICAN
+  { name:"Tacos al Pastor", cuisine:"Latin American", time:"30 min", servings:4, difficulty:"Easy",
+    img: W+"5/5f/Al_pastor_at_Tizoncito.jpg/640px-Al_pastor_at_Tizoncito.jpg",
+    ingredients:["chicken","onion","garlic","lime","olive oil","chili"],
+    allIngredients:["600g chicken thighs","3 cloves garlic","1 onion","2 chipotles or 2 tsp chili powder","1 tsp cumin","1 tsp oregano","Juice of 2 limes","Pineapple chunks","Corn tortillas","Cilantro, white onion, lime"],
+    steps:["Blend garlic, chipotle, cumin, oregano, and lime juice.","Marinate chicken 20 min; grill or pan-cook until charred.","Chop or slice chicken.","Warm tortillas on a dry pan.","Serve in tortillas with cilantro, diced onion, pineapple, and lime."] },
+
+  { name:"Feijoada", cuisine:"Latin American", time:"75 min", servings:6, difficulty:"Medium",
+    img: W+"8/83/Feijoada_Grains_of_Sao_Paulo_01.jpg/640px-Feijoada_Grains_of_Sao_Paulo_01.jpg",
+    ingredients:["canned beans","ground beef","onion","garlic","olive oil"],
+    allIngredients:["2 cans black beans","300g smoked sausage or beef","1 onion diced","4 cloves garlic","1 bay leaf","1 tsp cumin","2 tbsp olive oil","Orange wedges","White rice, kale"],
+    steps:["Brown sausage in oil, set aside.","Sauté onion and garlic until golden.","Add black beans with liquid, meat, bay leaf, cumin.","Simmer 45 min until thick and creamy.","Serve over rice with orange wedges and wilted kale."] },
+
+  { name:"Ceviche", cuisine:"Latin American", time:"20 min", servings:3, difficulty:"Easy",
+    img: W+"7/7e/Ceviche_de_pescado.jpg/640px-Ceviche_de_pescado.jpg",
+    ingredients:["shrimp","lime","onion","chili","garlic"],
+    allIngredients:["400g fresh fish or shrimp cubed","Juice of 6 limes","½ red onion thinly sliced","1–2 chili peppers sliced","2 cloves garlic minced","Fresh cilantro","Salt","Corn, avocado to serve"],
+    steps:["Cube fresh fish into 1-inch pieces.","Pour lime juice over to submerge. Add garlic and salt.","Cure in fridge 15–20 min until fish turns opaque.","Add sliced onion and chili in last 5 min.","Drain most juice, add cilantro. Serve cold with corn."] },
+
+  { name:"Arroz con Pollo", cuisine:"Latin American", time:"55 min", servings:4, difficulty:"Easy",
+    img: W+"8/87/Arroz_con_pollo.jpg/640px-Arroz_con_pollo.jpg",
+    ingredients:["chicken","rice","tomatoes","onion","garlic","bell pepper","olive oil","cumin"],
+    allIngredients:["1kg chicken pieces","1½ cups long-grain rice","2 tomatoes blended","1 bell pepper diced","1 onion diced","4 cloves garlic","1 tsp cumin","1 tsp paprika","2 cups chicken broth","2 tbsp olive oil"],
+    steps:["Brown chicken in oil, remove.","Sauté onion and bell pepper 5 min, add garlic, cumin, paprika.","Add tomato purée, cook 5 min.","Add rice, stir to coat. Pour in broth, add chicken on top.","Cover, cook on low 25 min."] },
+
+  { name:"Venezuelan Arepas", cuisine:"Latin American", time:"30 min", servings:4, difficulty:"Easy",
+    img: W+"6/6f/Arepas.jpg/640px-Arepas.jpg",
+    ingredients:["eggs","cheese","butter"],
+    allIngredients:["2 cups pre-cooked white cornmeal (masarepa)","2½ cups warm water","1 tsp salt","2 tbsp butter","Fillings: shredded chicken, avocado, black beans, cheese"],
+    steps:["Mix cornmeal with warm salted water and butter. Knead 2 min.","Divide into 8 balls, flatten to ½-inch thick discs.","Cook on greased skillet 5–6 min per side until golden.","Slice open like a pocket.","Fill with chicken, beans, cheese, or avocado."] },
+
+  { name:"Mexican Pozole", cuisine:"Latin American", time:"70 min", servings:6, difficulty:"Medium",
+    img: W+"5/56/Pozole_rojo_en_un_taz%C3%B3n.jpg/640px-Pozole_rojo_en_un_taz%C3%B3n.jpg",
+    ingredients:["chicken","canned beans","onion","garlic","chili","cumin","olive oil"],
+    allIngredients:["600g chicken thighs","1 can hominy corn or chickpeas","1 onion diced","4 cloves garlic","2 dried ancho chilis","1 tsp cumin","1 tsp oregano","6 cups chicken broth","Salt","Lime, shredded cabbage, radishes"],
+    steps:["Toast dried chilis in dry pan 30 sec. Soak in hot water 15 min, blend smooth.","Cook chicken in broth 25 min. Remove and shred.","Sauté onion and garlic, add blended chili sauce, cook 5 min.","Add broth, hominy, and shredded chicken.","Simmer 20 min. Serve with lime, cabbage, radishes, and tortillas."] },
+
+  // AMERICAN
+  { name:"Classic Beef Chili", cuisine:"American", time:"55 min", servings:5, difficulty:"Easy",
+    img: M+"uuqvwu1504629254.jpg",
+    ingredients:["ground beef","canned beans","tomatoes","onion","garlic","chili","cumin"],
+    allIngredients:["600g ground beef","1 can kidney beans","1 can diced tomatoes","1 onion diced","3 cloves garlic","2 tbsp chili powder","1 tsp cumin","1 tsp paprika","Salt, cheese, sour cream"],
+    steps:["Brown ground beef, drain fat.","Sauté onion and garlic 3 min.","Add chili powder, cumin, paprika — toast 1 min.","Add tomatoes, beans, and 1 cup water.","Simmer 35–40 min. Serve with cornbread and cheese."] },
+
+  { name:"Southern Fried Chicken", cuisine:"American", time:"40 min", servings:4, difficulty:"Medium",
+    img: M+"40r49m1763197022.jpg",
+    ingredients:["chicken","eggs","milk","butter","garlic"],
+    allIngredients:["1kg chicken pieces","1 cup buttermilk","1½ cups flour","1 tsp paprika","1 tsp garlic powder","1 tsp onion powder","1 tsp cayenne","Salt & pepper","Oil for frying"],
+    steps:["Soak chicken in buttermilk at least 1 hour.","Mix flour with all seasonings.","Dredge chicken in flour, shake off excess.","Fry at 325°F — 12–15 min for bone-in.","Drain on paper towel. Rest 5 min."] },
+
+  { name:"Mac & Cheese", cuisine:"American", time:"30 min", servings:4, difficulty:"Easy",
+    img: M+"qrqywr1503066605.jpg",
+    ingredients:["pasta","cheese","milk","butter"],
+    allIngredients:["300g elbow macaroni","2 cups shredded cheddar","1 cup milk","2 tbsp butter","2 tbsp flour","1 tsp mustard powder","½ tsp paprika","Salt & pepper"],
+    steps:["Cook pasta al dente, drain.","Melt butter, whisk in flour, cook 1 min.","Gradually whisk in milk until smooth and thick.","Off heat, stir in cheese. Season with mustard and paprika.","Combine with pasta. Optionally bake with breadcrumbs."] },
+
+  { name:"BBQ Pulled Chicken", cuisine:"American", time:"40 min", servings:4, difficulty:"Easy",
+    img: W+"8/80/Pulled_pork_with_slaw.jpg/640px-Pulled_pork_with_slaw.jpg",
+    ingredients:["chicken","onion","garlic","soy sauce","olive oil"],
+    allIngredients:["600g chicken thighs","½ cup BBQ sauce","1 tbsp brown sugar","1 tsp smoked paprika","1 tsp garlic powder","Salt & pepper","Buns, coleslaw to serve"],
+    steps:["Season chicken with paprika, garlic powder, salt, and pepper.","Bake 375°F 30 min until cooked through.","Shred with two forks.","Toss generously with BBQ sauce.","Pile high on buns with coleslaw."] },
+
+  { name:"Shrimp & Grits", cuisine:"American", time:"35 min", servings:4, difficulty:"Medium",
+    img: W+"9/9f/Shrimps_grits_with_tasso_ham_gravy.jpg/640px-Shrimps_grits_with_tasso_ham_gravy.jpg",
+    ingredients:["shrimp","butter","garlic","onion","cheese","milk"],
+    allIngredients:["500g large shrimp peeled","1 cup grits or polenta","3 cups water or broth","½ cup cheddar cheese","4 tbsp butter","3 cloves garlic","1 lemon","Salt & pepper","Spring onions"],
+    steps:["Cook grits in salted water/broth 20–25 min stirring often. Stir in cheese and butter.","Sauté garlic in butter.","Add shrimp, cook 2 min per side until pink.","Squeeze lemon over shrimp.","Serve shrimp over creamy grits, top with spring onions."] },
+
+  // MEDITERRANEAN
+  { name:"Spanakopita", cuisine:"Mediterranean", time:"55 min", servings:6, difficulty:"Medium",
+    img: W+"f/fe/Spanakopita_from_above_single.jpg/640px-Spanakopita_from_above_single.jpg",
+    ingredients:["spinach","eggs","cheese","onion","olive oil","butter"],
+    allIngredients:["500g spinach (squeezed dry)","200g feta cheese","2 eggs","1 onion diced","Phyllo or puff pastry","3 tbsp olive oil","2 tbsp butter melted","Salt, dill, nutmeg"],
+    steps:["Sauté onion in olive oil; add spinach until wilted.","Mix spinach with crumbled feta, eggs, dill, and nutmeg.","Layer phyllo sheets in buttered pan, brush each with butter.","Spread filling, top with more phyllo.","Brush with egg wash. Bake 375°F 40–45 min until golden."] },
+
+  { name:"Moussaka", cuisine:"Mediterranean", time:"80 min", servings:6, difficulty:"Hard",
+    img: M+"ctg8jd1585563097.jpg",
+    ingredients:["ground beef","eggplant","tomatoes","onion","garlic","milk","butter","cheese","olive oil"],
+    allIngredients:["500g ground lamb or beef","2 large eggplants sliced","1 can crushed tomatoes","1 onion","4 cloves garlic","1 tsp cinnamon","2 cups milk","3 tbsp butter","3 tbsp flour","1 cup parmesan","2 eggs","Olive oil"],
+    steps:["Salt eggplant 20 min, pat dry, brush with oil, roast 425°F 20 min.","Brown meat with onion, garlic, tomatoes, cinnamon. Simmer 15 min.","Béchamel: melt butter, whisk in flour, add milk gradually. Off heat, add cheese and eggs.","Layer: eggplant → meat → eggplant → béchamel.","Bake 375°F 40 min until golden. Rest 15 min."] },
+
+  { name:"Baba Ganoush", cuisine:"Mediterranean", time:"40 min", servings:4, difficulty:"Easy",
+    img: W+"a/a9/Baba_ghanoush.jpg/640px-Baba_ghanoush.jpg",
+    ingredients:["eggplant","garlic","lemon","olive oil"],
+    allIngredients:["2 large eggplants","2 cloves garlic","Juice of 1 lemon","2 tbsp tahini","2 tbsp olive oil","½ tsp cumin","Salt","Parsley, paprika"],
+    steps:["Char eggplants over gas flame or broiler, turning, until blackened — 15–20 min.","Let cool, peel and discard charred skin.","Drain in colander 10 min.","Mash or blend with garlic, tahini, lemon, cumin, and salt.","Drizzle olive oil, garnish, serve with pita."] },
+
+  { name:"Pasta Puttanesca", cuisine:"Mediterranean", time:"25 min", servings:3, difficulty:"Easy",
+    img: W+"5/5e/Pasta_puttanesca.jpg/640px-Pasta_puttanesca.jpg",
+    ingredients:["pasta","tomatoes","garlic","olive oil","onion"],
+    allIngredients:["300g spaghetti","1 can crushed tomatoes","4 cloves garlic","¼ cup olives","2 tbsp capers","4 anchovy fillets (optional)","½ tsp chili flakes","3 tbsp olive oil","Salt, parsley"],
+    steps:["Boil pasta al dente, reserve pasta water.","Heat oil, add anchovies until dissolved, then garlic and chili.","Add olives, capers, and tomatoes. Simmer 10 min.","Toss with drained pasta, add pasta water to loosen.","Finish with parsley and serve."] },
+
+  // EUROPEAN
+  { name:"French Onion Soup", cuisine:"European", time:"60 min", servings:4, difficulty:"Medium",
+    img: M+"xvrrux1511783685.jpg",
+    ingredients:["onion","butter","garlic","cheese"],
+    allIngredients:["6 large onions thinly sliced","3 tbsp butter","2 cloves garlic","1 tsp thyme","4 cups beef broth","Baguette slices","1½ cups gruyère or swiss cheese grated"],
+    steps:["Melt butter, add onions. Cook 40–45 min until deeply caramelised.","Add garlic and thyme, cook 2 min.","Add broth, simmer 15 min. Season well.","Ladle into oven-safe bowls, top with baguette and pile on cheese.","Broil until cheese is bubbling and browned."] },
+
+  { name:"Spanish Tortilla", cuisine:"European", time:"35 min", servings:4, difficulty:"Medium",
+    img: W+"a/a4/Tortilla_de_Patatas_%28Potato_Omelette%29.jpg/640px-Tortilla_de_Patatas_%28Potato_Omelette%29.jpg",
+    ingredients:["eggs","potatoes","onion","olive oil"],
+    allIngredients:["6 eggs","4 medium potatoes peeled, thinly sliced","1 large onion thinly sliced","½ cup olive oil","Salt"],
+    steps:["Heat olive oil, add potatoes and onion. Cook gently 20 min until soft.","Drain, reserving oil. Beat eggs with salt.","Mix potato/onion into eggs; sit 5 min.","Heat 2 tbsp reserved oil, pour in mixture. Cook low heat 5–6 min.","Flip onto plate, slide back in. Cook 3 more min. Cool before slicing."] },
+
+  { name:"Beef Bourguignon", cuisine:"European", time:"150 min", servings:6, difficulty:"Hard",
+    img: M+"vtqxtu1511784197.jpg",
+    ingredients:["ground beef","onion","garlic","tomatoes","butter","potatoes"],
+    allIngredients:["1kg beef chuck cut into chunks","1 bottle red wine","1 onion diced","4 cloves garlic","200g mushrooms","2 carrots","2 tbsp butter","2 tbsp flour","Bouquet garni (thyme, bay)"],
+    steps:["Pat beef dry, season, brown in batches in butter.","Sauté onion, carrots, garlic 5 min.","Add flour, stir, then add wine and broth to cover.","Add bouquet garni, braise 1.5–2 hours until very tender.","Sauté mushrooms, add last 15 min. Serve with bread or mashed potato."] },
+
+  { name:"Pierogi", cuisine:"European", time:"60 min", servings:4, difficulty:"Medium",
+    img: M+"45xxr21593348847.jpg",
+    ingredients:["potatoes","cheese","onion","butter","eggs"],
+    allIngredients:["2 cups flour","1 egg","½ cup sour cream","3 large potatoes boiled and mashed","1 cup cheddar cheese","1 onion diced and caramelised","2 tbsp butter","Salt & pepper"],
+    steps:["Make dough: mix flour, egg, sour cream, salt. Knead 5 min. Rest 30 min.","Mix mashed potato with cheese and caramelised onion. Season well.","Roll dough thin, cut circles. Fill, fold and seal edges.","Boil in salted water 3–4 min until they float.","Fry in butter until golden and crispy. Serve with sour cream."] }
+];
+
+const QUICK_ADDS = ["Chicken","Ground Beef","Lamb","Eggs","Tofu","Salmon","Shrimp","Rice","Pasta","Lentils","Chickpeas","Canned Beans","Potatoes","Plantain","Onion","Garlic","Ginger","Tomatoes","Spinach","Bell Pepper","Eggplant","Coconut Milk","Cheese","Butter","Olive Oil","Soy Sauce","Lemon","Lime","Cumin","Chili"];
+
+// ─── PERSISTENCE ──────────────────────────────────────────────────────────────
+let myIngredients  = JSON.parse(localStorage.getItem('mealPrepIngredients')  || '[]');
+let deletedRecipes = new Set(JSON.parse(localStorage.getItem('deletedRecipes')  || '[]'));
+let customImages   = JSON.parse(localStorage.getItem('customImages')   || '{}');
+let lastResults = [], currentCuisine = 'All', currentMatchFilter = 'all', currentDisplayed = [];
+
+function getImg(r) { return customImages[r.name] || r.img; }
+
+// ─── SIDEBAR ──────────────────────────────────────────────────────────────────
+const qc = document.getElementById('quickAdds');
+QUICK_ADDS.forEach(item => {
+  const btn = document.createElement('button');
+  btn.className = 'cat-btn'; btn.textContent = item;
+  btn.onclick = () => toggleIngredient(item.toLowerCase());
+  qc.appendChild(btn);
+});
+
+function renderSidebar() {
+  const list = document.getElementById('ingredientsList');
+  const sbtn = document.getElementById('suggestBtn');
+  if (!myIngredients.length) {
+    list.innerHTML = '<span class="empty-label">Nothing added yet</span>';
+    sbtn.disabled = true;
+  } else {
+    sbtn.disabled = false;
+    list.innerHTML = myIngredients.map(ing =>
+      `<div class="ingredient-tag">${ing}<button onclick="removeIngredient('${ing.replace(/'/g,"\\'")}')">×</button></div>`
+    ).join('');
+  }
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', myIngredients.includes(b.textContent.toLowerCase())));
+  document.getElementById('restoreBtn').style.display = deletedRecipes.size ? 'block' : 'none';
+}
+
+function addIngredient() {
+  const inp = document.getElementById('ingredientInput');
+  inp.value.trim().toLowerCase().split(',').map(s=>s.trim()).filter(Boolean).forEach(v => { if (!myIngredients.includes(v)) myIngredients.push(v); });
+  inp.value = ''; save();
+}
+function toggleIngredient(n) { myIngredients = myIngredients.includes(n) ? myIngredients.filter(i=>i!==n) : [...myIngredients,n]; save(); }
+function removeIngredient(n) { myIngredients = myIngredients.filter(i=>i!==n); save(); }
+function clearAll() {
+  myIngredients = []; save(); lastResults = []; currentDisplayed = [];
+  document.getElementById('pinGrid').innerHTML = `<div class="empty-state"><div class="icon">🌍</div><p>Add ingredients on the left,<br>then tap <strong>Find Recipes</strong>.</p></div>`;
+  document.getElementById('resultsLabel').textContent = 'Add ingredients to get started';
+  document.getElementById('filterPills').style.display = 'none';
+  document.getElementById('cuisineRow').style.display = 'none';
+}
+function restoreDeleted() { deletedRecipes.clear(); localStorage.removeItem('deletedRecipes'); renderSidebar(); if (lastResults.length) applyFilters(); }
+function save() { localStorage.setItem('mealPrepIngredients', JSON.stringify(myIngredients)); renderSidebar(); }
+document.getElementById('ingredientInput').addEventListener('keydown', e => { if (e.key==='Enter') addIngredient(); });
+
+// ─── MATCHING ─────────────────────────────────────────────────────────────────
+function matchRecipe(r) {
+  const have = r.ingredients.filter(i => myIngredients.some(m => m.includes(i)||i.includes(m)));
+  const need = r.ingredients.filter(i => !myIngredients.some(m => m.includes(i)||i.includes(m)));
+  return { have, need, pct: have.length/r.ingredients.length };
+}
+
+function suggestRecipes() {
+  lastResults = RECIPES.filter(r => !deletedRecipes.has(r.name))
+    .map(r => ({ ...r, ...matchRecipe(r) })).filter(r => r.pct > 0).sort((a,b) => b.pct - a.pct);
+  currentCuisine = 'All'; currentMatchFilter = 'all';
+  document.querySelectorAll('.filter-pill').forEach((b,i) => b.classList.toggle('active', i===0));
+  document.querySelectorAll('.cuisine-pill').forEach((b,i) => b.classList.toggle('active', i===0));
+  document.getElementById('filterPills').style.display = 'flex';
+  document.getElementById('cuisineRow').style.display = 'flex';
+  applyFilters();
+}
+
+function applyFilters() {
+  let f = lastResults.filter(r => !deletedRecipes.has(r.name));
+  if (currentCuisine !== 'All') f = f.filter(r => r.cuisine === currentCuisine);
+  if (currentMatchFilter === 'high') f = f.filter(r => r.pct >= 0.85);
+  if (currentMatchFilter === 'med') f = f.filter(r => r.pct >= 0.5 && r.pct < 0.85);
+  currentDisplayed = f;
+  document.getElementById('resultsLabel').textContent = `${f.length} recipe${f.length!==1?'s':''} found${currentCuisine!=='All'?' · '+currentCuisine:''}`;
+  renderPins(f);
+}
+
+// ─── RENDER CARDS ─────────────────────────────────────────────────────────────
+const heights = [170,195,215,180,205,190];
+function renderPins(recipes) {
+  const grid = document.getElementById('pinGrid');
+  if (!recipes.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="icon">🤔</div><p>No matches with these filters.<br>Try a different cuisine or add more ingredients.</p></div>`;
+    return;
+  }
+  grid.innerHTML = recipes.map((r, idx) => {
+    const rc = r.pct>=0.85?'ribbon-high':r.pct>=0.5?'ribbon-med':'ribbon-low';
+    const rt = r.pct>=0.85?'✅ Ready to cook':r.pct>=0.5?'🟡 Almost there':'🛒 Need a few';
+    const imgUrl = getImg(r);
+    const nameEsc = r.name.replace(/'/g,"\\'").replace(/"/g,"&quot;");
+    return `
+    <div class="pin-card" id="card-${idx}" data-name="${nameEsc}">
+      <div class="pin-img-wrap" style="min-height:${heights[idx%heights.length]}px" onclick="openModal(${idx})">
+        <img src="${imgUrl}" alt="${r.name}" loading="lazy" style="min-height:${heights[idx%heights.length]}px"
+          onerror="this.style.display='none'; this.nextElementSibling && (this.nextElementSibling.style.display='flex')" />
+        <div class="img-placeholder" style="display:none;min-height:${heights[idx%heights.length]}px" onclick="openImgEditor(event,${idx})">
+          <span class="ph-icon">📷</span><span>No image — click to add</span>
+        </div>
+        <div class="card-actions">
+          <button class="action-btn btn-delete" onclick="deleteCard(event,${idx})" title="Remove recipe">✕</button>
+          <button class="action-btn btn-img" onclick="openImgEditor(event,${idx})" title="Change image">📷</button>
+        </div>
+        <div class="match-ribbon ${rc}">${rt}</div>
+        <div class="cuisine-flag">${r.cuisine}</div>
+        <!-- inline image editor -->
+        <div class="img-editor" id="editor-${idx}">
+          <label>Paste image URL or search online:</label>
+          <input type="text" id="imgUrl-${idx}" placeholder="https://..." value="${imgUrl.startsWith('https://upload.wikimedia') || imgUrl.startsWith('https://www.themealdb') ? '' : imgUrl}" />
+          <div class="img-editor-btns">
+            <button class="btn-save-img" onclick="saveImg(event,${idx})">Save</button>
+            <button class="btn-search-img" onclick="searchImg(event,'${nameEsc}')">🔍 Search</button>
+            <button class="btn-cancel-img" onclick="closeImgEditor(event,${idx})">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <div class="pin-body" onclick="openModal(${idx})" style="cursor:pointer">
+        <div class="pin-title">${r.name}</div>
+        <div class="pin-meta"><span>⏱ ${r.time}</span><span>👥 ${r.servings}</span><span>📊 ${r.difficulty}</span></div>
+        <div class="pin-tags">
+          ${r.have.map(i=>`<span class="have-tag">✓ ${i}</span>`).join('')}
+          ${r.need.map(i=>`<span class="need-tag">+ ${i}</span>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── DELETE ──────────────────────────────────────────────────────────────────
+function deleteCard(e, idx) {
+  e.stopPropagation();
+  const r = currentDisplayed[idx];
+  if (!r) return;
+  deletedRecipes.add(r.name);
+  localStorage.setItem('deletedRecipes', JSON.stringify([...deletedRecipes]));
+  // Animate out
+  const card = document.getElementById('card-'+idx);
+  if (card) { card.style.opacity='0'; card.style.transform='scale(0.9)'; card.style.transition='all .25s'; setTimeout(()=>applyFilters(),260); }
+  renderSidebar();
+}
+
+// ─── IMAGE EDITOR ─────────────────────────────────────────────────────────────
+function openImgEditor(e, idx) {
+  e.stopPropagation();
+  // Close any other open editors first
+  document.querySelectorAll('.img-editor.open').forEach(el => el.classList.remove('open'));
+  const editor = document.getElementById('editor-'+idx);
+  if (editor) {
+    editor.classList.add('open');
+    // Pre-fill with current custom image if any
+    const r = currentDisplayed[idx];
+    if (r && customImages[r.name]) {
+      document.getElementById('imgUrl-'+idx).value = customImages[r.name];
+    }
+    document.getElementById('imgUrl-'+idx).focus();
+  }
+}
+function closeImgEditor(e, idx) {
+  e.stopPropagation();
+  const editor = document.getElementById('editor-'+idx);
+  if (editor) editor.classList.remove('open');
+}
+function saveImg(e, idx) {
+  e.stopPropagation();
+  const r = currentDisplayed[idx]; if (!r) return;
+  const url = document.getElementById('imgUrl-'+idx).value.trim();
+  if (url) {
+    customImages[r.name] = url;
+    localStorage.setItem('customImages', JSON.stringify(customImages));
+  } else {
+    delete customImages[r.name];
+    localStorage.setItem('customImages', JSON.stringify(customImages));
+  }
+  applyFilters(); // re-render with new image
+}
+function searchImg(e, name) {
+  e.stopPropagation();
+  window.open('https://www.google.com/search?tbm=isch&q='+encodeURIComponent(name+' food dish recipe'), '_blank');
+}
+
+// ─── MODAL ───────────────────────────────────────────────────────────────────
+function openModal(idx) {
+  const r = currentDisplayed[idx]; if (!r) return;
+  // Close any image editors first
+  document.querySelectorAll('.img-editor.open').forEach(el => el.classList.remove('open'));
+  const mc = r.pct>=0.85?'#22c55e':r.pct>=0.5?'#eab308':'#ef4444';
+  const mt = r.pct>=0.85?'✅ Ready to cook':r.pct>=0.5?'🟡 Almost there':'🛒 Need a few things';
+  const modalImg = document.getElementById('modalImg');
+  modalImg.style.display = 'block';
+  modalImg.src = getImg(r);
+  modalImg.alt = r.name;
+  document.getElementById('modalCuisine').textContent = r.cuisine;
+  document.getElementById('modalTitle').textContent = r.name;
+  document.getElementById('modalMeta').innerHTML = `<span>⏱ ${r.time}</span><span>👥 ${r.servings} servings</span><span>📊 ${r.difficulty}</span>`;
+  document.getElementById('modalMatchBadge').textContent = mt;
+  document.getElementById('modalMatchBadge').style.cssText = `background:${mc}22;color:${r.pct>=0.85?'#15803d':r.pct>=0.5?'#a16207':'#b91c1c'}`;
+  document.getElementById('modalIngredients').innerHTML = r.allIngredients.map(i=>`<li>${i}</li>`).join('');
+  document.getElementById('modalSteps').innerHTML = r.steps.map(s=>`<li>${s}</li>`).join('');
+  document.getElementById('modalBg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModalDirect() { document.getElementById('modalBg').classList.remove('open'); document.body.style.overflow=''; }
+function closeModal(e) { if (e.target===document.getElementById('modalBg')) closeModalDirect(); }
+
+function setCuisine(c,btn) { currentCuisine=c; document.querySelectorAll('.cuisine-pill').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); applyFilters(); }
+function setFilter(f,btn) { currentMatchFilter=f; document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); applyFilters(); }
+
+// Close editors when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.img-editor') && !e.target.closest('.btn-img') && !e.target.closest('.img-placeholder')) {
+    document.querySelectorAll('.img-editor.open').forEach(el=>el.classList.remove('open'));
+  }
+});
+
+renderSidebar();
+if (myIngredients.length) suggestRecipes();
+</script>
+</body>
+</html>
