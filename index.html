@@ -5,131 +5,777 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Meal Prep – World Recipes</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0ece6; color: #2d2d2d; min-height: 100vh; }
+  /* ─────────────────────────────────────────────────────────────────────────
+     RESET & GLOBAL
+     ───────────────────────────────────────────────────────────────────────── */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
-  header { background: white; border-bottom: 1px solid #e8e0d8; padding: 14px 28px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-  header h1 { font-size: 1.25rem; font-weight: 800; color: #e60023; }
-  header p { font-size: 0.8rem; color: #999; margin-top: 2px; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #f0ece6;
+    color: #2d2d2d;
+    min-height: 100vh;
+  }
 
-  .layout { display: grid; grid-template-columns: 300px 1fr; min-height: calc(100vh - 61px); }
+  /* ─────────────────────────────────────────────────────────────────────────
+     HEADER
+     ───────────────────────────────────────────────────────────────────────── */
+  header {
+    background: white;
+    border-bottom: 1px solid #e8e0d8;
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
 
-  .sidebar { background: white; border-right: 1px solid #e8e0d8; padding: 20px 16px; overflow-y: auto; max-height: calc(100vh - 61px); position: sticky; top: 61px; }
-  .sidebar-section { margin-bottom: 18px; }
-  .sidebar-section h3 { font-size: 0.72rem; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 10px; }
+  header h1 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #e60023;
+  }
 
-  .input-row { display: flex; gap: 7px; }
-  .input-row input { flex: 1; padding: 9px 13px; border: 1.5px solid #eee; border-radius: 22px; font-size: 0.86rem; outline: none; background: #f8f8f8; transition: all .2s; }
-  .input-row input:focus { border-color: #e60023; background: white; }
-  .input-row button { padding: 9px 15px; background: #e60023; color: white; border: none; border-radius: 22px; font-size: 0.83rem; cursor: pointer; font-weight: 700; }
-  .input-row button:hover { background: #c0001d; }
+  header p {
+    font-size: 0.8rem;
+    color: #999;
+    margin-top: 2px;
+  }
 
-  .cat-grid { display: flex; flex-wrap: wrap; gap: 5px; }
-  .cat-btn { padding: 4px 11px; border: 1.5px solid #e8e8e8; background: white; border-radius: 18px; font-size: 0.76rem; cursor: pointer; transition: all .15s; color: #555; }
-  .cat-btn:hover { border-color: #e60023; color: #e60023; }
-  .cat-btn.active { background: #ffe0e4; border-color: #e60023; color: #c0001d; font-weight: 700; }
+  /* ─────────────────────────────────────────────────────────────────────────
+     LAYOUT
+     ───────────────────────────────────────────────────────────────────────── */
+  .layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    min-height: calc(100vh - 61px);
+  }
 
-  .divider { height: 1px; background: #f2f2f2; margin: 14px 0; }
+  .main {
+    display: flex;
+    flex-direction: column;
+  }
 
-  .ingredients-list { display: flex; flex-wrap: wrap; gap: 5px; min-height: 32px; }
-  .ingredient-tag { display: flex; align-items: center; gap: 4px; background: #fff0f1; border: 1px solid #ffc7cc; border-radius: 18px; padding: 3px 9px; font-size: 0.77rem; color: #b00020; }
-  .ingredient-tag button { background: none; border: none; cursor: pointer; color: #c77; font-size: 0.9rem; line-height: 1; padding: 0; }
-  .ingredient-tag button:hover { color: #e60023; }
-  .empty-label { color: #ccc; font-size: 0.8rem; font-style: italic; }
+  .main-body {
+    padding: 20px;
+    flex: 1;
+  }
 
-  .suggest-btn { width: 100%; padding: 12px; background: #e60023; color: white; border: none; border-radius: 22px; font-size: 0.93rem; font-weight: 800; cursor: pointer; margin-top: 4px; }
-  .suggest-btn:hover { background: #c0001d; }
-  .suggest-btn:disabled { background: #e0e0e0; color: #bbb; cursor: not-allowed; }
-  .clear-btn { width: 100%; background: none; border: none; color: #ccc; font-size: 0.78rem; cursor: pointer; margin-top: 6px; }
-  .clear-btn:hover { color: #e60023; text-decoration: underline; }
-  .restore-btn { width: 100%; background: none; border: 1px solid #e8e8e8; border-radius: 18px; color: #888; font-size: 0.78rem; cursor: pointer; margin-top: 6px; padding: 6px; }
-  .restore-btn:hover { border-color: #e60023; color: #e60023; }
+  /* ─────────────────────────────────────────────────────────────────────────
+     SIDEBAR
+     ───────────────────────────────────────────────────────────────────────── */
+  .sidebar {
+    background: white;
+    border-right: 1px solid #e8e0d8;
+    padding: 20px 16px;
+    overflow-y: auto;
+    max-height: calc(100vh - 61px);
+    position: sticky;
+    top: 61px;
+  }
 
-  .cuisine-row { padding: 12px 20px; background: white; border-bottom: 1px solid #eee; display: flex; gap: 8px; flex-wrap: wrap; }
-  .cuisine-pill { padding: 6px 16px; border: 1.5px solid #e0e0e0; background: white; border-radius: 22px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all .15s; color: #555; white-space: nowrap; }
-  .cuisine-pill:hover { border-color: #e60023; color: #e60023; }
-  .cuisine-pill.active { background: #e60023; border-color: #e60023; color: white; }
+  .sidebar-section {
+    margin-bottom: 18px;
+  }
 
-  .main { display: flex; flex-direction: column; }
-  .main-body { padding: 20px; flex: 1; }
+  .sidebar-section h3 {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 10px;
+  }
 
-  .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
-  .top-bar h2 { font-size: 0.95rem; font-weight: 700; color: #555; }
-  .filter-pills { display: flex; gap: 7px; }
-  .filter-pill { padding: 6px 14px; border: 1.5px solid #ddd; background: white; border-radius: 20px; font-size: 0.78rem; cursor: pointer; font-weight: 600; color: #555; transition: all .15s; }
-  .filter-pill.active { background: #111; border-color: #111; color: white; }
+  .divider {
+    height: 1px;
+    background: #f2f2f2;
+    margin: 14px 0;
+  }
 
-  .pin-grid { columns: 3 260px; column-gap: 14px; }
-  @media (max-width: 900px) { .pin-grid { columns: 2 220px; } }
-  @media (max-width: 600px) { .pin-grid { columns: 1; } .layout { grid-template-columns: 1fr; } }
+  /* Input Row (sidebar ingredient input) */
+  .input-row {
+    display: flex;
+    gap: 7px;
+  }
 
-  /* Pin card */
-  .pin-card { break-inside: avoid; margin-bottom: 14px; background: white; border-radius: 14px; overflow: hidden; cursor: pointer; transition: transform .2s, box-shadow .2s; box-shadow: 0 1px 4px rgba(0,0,0,0.09); position: relative; }
-  .pin-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.13); }
+  .input-row input {
+    flex: 1;
+    padding: 9px 13px;
+    border: 1.5px solid #eee;
+    border-radius: 22px;
+    font-size: 0.86rem;
+    outline: none;
+    background: #f8f8f8;
+    transition: all .2s;
+  }
 
-  .pin-img-wrap { position: relative; overflow: hidden; background: #e8e3db; }
-  .pin-img-wrap img { width: 100%; display: block; object-fit: cover; transition: transform .3s; }
-  .pin-card:hover .pin-img-wrap img { transform: scale(1.03); }
+  .input-row input:focus {
+    border-color: #e60023;
+    background: white;
+  }
 
-  /* Hover action bar that slides up over the image */
-  .card-actions { position: absolute; top: 0; left: 0; right: 0; padding: 10px; display: flex; justify-content: space-between; align-items: flex-start; opacity: 0; transition: opacity .2s; pointer-events: none; }
-  .pin-card:hover .card-actions { opacity: 1; pointer-events: all; }
+  .input-row button {
+    padding: 9px 15px;
+    background: #e60023;
+    color: white;
+    border: none;
+    border-radius: 22px;
+    font-size: 0.83rem;
+    cursor: pointer;
+    font-weight: 700;
+  }
 
-  .action-btn { border: none; border-radius: 50%; width: 32px; height: 32px; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.25); transition: transform .15s; }
-  .action-btn:hover { transform: scale(1.1); }
-  .btn-delete { background: #ff3b30; color: white; }
-  .btn-img { background: white; color: #333; font-size: 0.8rem; }
+  .input-row button:hover {
+    background: #c0001d;
+  }
 
-  /* No-image placeholder */
-  .img-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f0ece6; color: #bbb; font-size: 0.8rem; gap: 6px; cursor: pointer; }
-  .img-placeholder .ph-icon { font-size: 1.8rem; }
+  /* Quick Add Category Buttons */
+  .cat-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
 
-  .match-ribbon { position: absolute; bottom: 10px; left: 10px; padding: 3px 9px; border-radius: 18px; font-size: 0.7rem; font-weight: 800; backdrop-filter: blur(6px); }
-  .ribbon-high { background: rgba(34,197,94,0.9); color: white; }
-  .ribbon-med { background: rgba(234,179,8,0.9); color: white; }
-  .ribbon-low { background: rgba(239,68,68,0.85); color: white; }
-  .cuisine-flag { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.55); color: white; border-radius: 12px; padding: 3px 9px; font-size: 0.7rem; font-weight: 700; backdrop-filter: blur(4px); }
+  .cat-btn {
+    padding: 4px 11px;
+    border: 1.5px solid #e8e8e8;
+    background: white;
+    border-radius: 18px;
+    font-size: 0.76rem;
+    cursor: pointer;
+    transition: all .15s;
+    color: #555;
+  }
 
-  .pin-body { padding: 10px 12px 12px; }
-  .pin-title { font-size: 0.88rem; font-weight: 700; color: #111; margin-bottom: 4px; line-height: 1.3; }
-  .pin-meta { display: flex; gap: 10px; font-size: 0.73rem; color: #999; margin-bottom: 6px; }
-  .pin-tags { display: flex; flex-wrap: wrap; gap: 3px; }
-  .have-tag { background: #f0fdf4; color: #15803d; border-radius: 4px; padding: 2px 6px; font-size: 0.69rem; font-weight: 600; }
-  .need-tag { background: #fefce8; color: #a16207; border-radius: 4px; padding: 2px 6px; font-size: 0.69rem; font-weight: 600; }
+  .cat-btn:hover {
+    border-color: #e60023;
+    color: #e60023;
+  }
 
-  /* Image editor panel (slides up from bottom of image) */
-  .img-editor { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.88); backdrop-filter: blur(8px); padding: 12px; display: none; z-index: 10; }
-  .img-editor.open { display: block; }
-  .img-editor label { display: block; color: #ddd; font-size: 0.72rem; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
-  .img-editor input { width: 100%; padding: 7px 10px; border: 1.5px solid #555; border-radius: 8px; background: #222; color: white; font-size: 0.82rem; outline: none; margin-bottom: 8px; }
-  .img-editor input:focus { border-color: #e60023; }
-  .img-editor-btns { display: flex; gap: 6px; }
-  .img-editor-btns button { flex: 1; padding: 7px; border: none; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
-  .btn-save-img { background: #e60023; color: white; }
-  .btn-search-img { background: #444; color: #ddd; }
-  .btn-cancel-img { background: #333; color: #aaa; }
+  .cat-btn.active {
+    background: #ffe0e4;
+    border-color: #e60023;
+    color: #c0001d;
+    font-weight: 700;
+  }
 
-  /* Recipe detail modal */
-  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.72); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
-  .modal-bg.open { display: flex; }
-  .modal { background: white; border-radius: 20px; max-width: 740px; width: 100%; max-height: 90vh; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; }
-  @media (max-width: 600px) { .modal { grid-template-columns: 1fr; } }
-  .modal-img { position: relative; background: #e8e3db; }
-  .modal-img img { width: 100%; height: 100%; object-fit: cover; border-radius: 20px 0 0 20px; min-height: 280px; display: block; }
-  @media (max-width: 600px) { .modal-img img { border-radius: 20px 20px 0 0; min-height: 200px; } }
-  .modal-content { padding: 26px; overflow-y: auto; }
-  .modal-close { position: absolute; top: 10px; right: 10px; background: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 1rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; z-index: 1; }
-  .modal-cuisine-tag { display: inline-block; padding: 3px 11px; border-radius: 14px; font-size: 0.72rem; font-weight: 800; background: #f3f3f3; color: #555; margin-bottom: 8px; }
-  .modal-title { font-size: 1.15rem; font-weight: 800; color: #111; margin-bottom: 6px; }
-  .modal-meta { display: flex; gap: 14px; font-size: 0.79rem; color: #999; margin-bottom: 12px; }
-  .modal-match { display: inline-block; padding: 3px 11px; border-radius: 18px; font-size: 0.75rem; font-weight: 700; margin-bottom: 14px; }
-  .modal h4 { font-size: 0.74rem; font-weight: 800; color: #bbb; text-transform: uppercase; letter-spacing: .7px; margin-bottom: 7px; margin-top: 14px; }
-  .modal ul { padding-left: 15px; font-size: 0.85rem; line-height: 1.8; color: #444; }
-  .modal ol { padding-left: 15px; font-size: 0.85rem; line-height: 1.9; color: #444; }
+  /* Ingredients List */
+  .ingredients-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-height: 32px;
+  }
 
-  .empty-state { text-align: center; padding: 80px 20px; color: #ccc; }
-  .empty-state .icon { font-size: 3rem; margin-bottom: 14px; }
-  .empty-state p { font-size: 0.9rem; line-height: 1.6; }
+  .ingredient-tag {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #fff0f1;
+    border: 1px solid #ffc7cc;
+    border-radius: 18px;
+    padding: 3px 9px;
+    font-size: 0.77rem;
+    color: #b00020;
+  }
+
+  .ingredient-tag button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #c77;
+    font-size: 0.9rem;
+    line-height: 1;
+    padding: 0;
+  }
+
+  .ingredient-tag button:hover {
+    color: #e60023;
+  }
+
+  .empty-label {
+    color: #ccc;
+    font-size: 0.8rem;
+    font-style: italic;
+  }
+
+  /* Sidebar Buttons */
+  .suggest-btn {
+    width: 100%;
+    padding: 12px;
+    background: #e60023;
+    color: white;
+    border: none;
+    border-radius: 22px;
+    font-size: 0.93rem;
+    font-weight: 800;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+
+  .suggest-btn:hover {
+    background: #c0001d;
+  }
+
+  .suggest-btn:disabled {
+    background: #e0e0e0;
+    color: #bbb;
+    cursor: not-allowed;
+  }
+
+  .clear-btn {
+    width: 100%;
+    background: none;
+    border: none;
+    color: #ccc;
+    font-size: 0.78rem;
+    cursor: pointer;
+    margin-top: 6px;
+  }
+
+  .clear-btn:hover {
+    color: #e60023;
+    text-decoration: underline;
+  }
+
+  .restore-btn {
+    width: 100%;
+    background: none;
+    border: 1px solid #e8e8e8;
+    border-radius: 18px;
+    color: #888;
+    font-size: 0.78rem;
+    cursor: pointer;
+    margin-top: 6px;
+    padding: 6px;
+  }
+
+  .restore-btn:hover {
+    border-color: #e60023;
+    color: #e60023;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     CUISINE ROW (Filters)
+     ───────────────────────────────────────────────────────────────────────── */
+  .cuisine-row {
+    padding: 12px 20px;
+    background: white;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .cuisine-pill {
+    padding: 6px 16px;
+    border: 1.5px solid #e0e0e0;
+    background: white;
+    border-radius: 22px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+    color: #555;
+    white-space: nowrap;
+  }
+
+  .cuisine-pill:hover {
+    border-color: #e60023;
+    color: #e60023;
+  }
+
+  .cuisine-pill.active {
+    background: #e60023;
+    border-color: #e60023;
+    color: white;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     TOP BAR & FILTERS
+     ───────────────────────────────────────────────────────────────────────── */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .top-bar h2 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #555;
+  }
+
+  .filter-pills {
+    display: flex;
+    gap: 7px;
+  }
+
+  .filter-pill {
+    padding: 6px 14px;
+    border: 1.5px solid #ddd;
+    background: white;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: #555;
+    transition: all .15s;
+  }
+
+  .filter-pill.active {
+    background: #111;
+    border-color: #111;
+    color: white;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     PIN GRID & CARDS
+     ───────────────────────────────────────────────────────────────────────── */
+  .pin-grid {
+    columns: 3 260px;
+    column-gap: 14px;
+  }
+
+  @media (max-width: 900px) {
+    .pin-grid { columns: 2 220px; }
+  }
+
+  @media (max-width: 600px) {
+    .pin-grid { columns: 1; }
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  /* Pin Card Container */
+  .pin-card {
+    break-inside: avoid;
+    margin-bottom: 14px;
+    background: white;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform .2s, box-shadow .2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.09);
+    position: relative;
+  }
+
+  .pin-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.13);
+  }
+
+  /* Pin Image Wrapper */
+  .pin-img-wrap {
+    position: relative;
+    overflow: hidden;
+    background: #e8e3db;
+  }
+
+  .pin-img-wrap img {
+    width: 100%;
+    display: block;
+    object-fit: cover;
+    transition: transform .3s;
+  }
+
+  .pin-card:hover .pin-img-wrap img {
+    transform: scale(1.03);
+  }
+
+  /* Image Placeholder (when no image) */
+  .img-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #f0ece6;
+    color: #bbb;
+    font-size: 0.8rem;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  .img-placeholder .ph-icon {
+    font-size: 1.8rem;
+  }
+
+  /* Ribbon (match level indicator) */
+  .match-ribbon {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    padding: 3px 9px;
+    border-radius: 18px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    backdrop-filter: blur(6px);
+  }
+
+  .ribbon-high {
+    background: rgba(34, 197, 94, 0.9);
+    color: white;
+  }
+
+  .ribbon-med {
+    background: rgba(234, 179, 8, 0.9);
+    color: white;
+  }
+
+  .ribbon-low {
+    background: rgba(239, 68, 68, 0.85);
+    color: white;
+  }
+
+  /* Cuisine Flag */
+  .cuisine-flag {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.55);
+    color: white;
+    border-radius: 12px;
+    padding: 3px 9px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    backdrop-filter: blur(4px);
+  }
+
+  /* Card Action Buttons (delete, edit image) */
+  .card-actions {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    opacity: 0;
+    transition: opacity .2s;
+    pointer-events: none;
+  }
+
+  .pin-card:hover .card-actions {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .action-btn {
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    transition: transform .15s;
+  }
+
+  .action-btn:hover {
+    transform: scale(1.1);
+  }
+
+  .btn-delete {
+    background: #ff3b30;
+    color: white;
+  }
+
+  .btn-img {
+    background: white;
+    color: #333;
+    font-size: 0.8rem;
+  }
+
+  /* Pin Body (title, meta, tags) */
+  .pin-body {
+    padding: 10px 12px 12px;
+  }
+
+  .pin-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+
+  .pin-meta {
+    display: flex;
+    gap: 10px;
+    font-size: 0.73rem;
+    color: #999;
+    margin-bottom: 6px;
+  }
+
+  .pin-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+
+  .have-tag {
+    background: #f0fdf4;
+    color: #15803d;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.69rem;
+    font-weight: 600;
+  }
+
+  .need-tag {
+    background: #fefce8;
+    color: #a16207;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.69rem;
+    font-weight: 600;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     IMAGE EDITOR PANEL
+     ───────────────────────────────────────────────────────────────────────── */
+  .img-editor {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.88);
+    backdrop-filter: blur(8px);
+    padding: 12px;
+    display: none;
+    z-index: 10;
+  }
+
+  .img-editor.open {
+    display: block;
+  }
+
+  .img-editor label {
+    display: block;
+    color: #ddd;
+    font-size: 0.72rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+
+  .img-editor input {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1.5px solid #555;
+    border-radius: 8px;
+    background: #222;
+    color: white;
+    font-size: 0.82rem;
+    outline: none;
+    margin-bottom: 8px;
+  }
+
+  .img-editor input:focus {
+    border-color: #e60023;
+  }
+
+  .img-editor-btns {
+    display: flex;
+    gap: 6px;
+  }
+
+  .img-editor-btns button {
+    flex: 1;
+    padding: 7px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .btn-save-img {
+    background: #e60023;
+    color: white;
+  }
+
+  .btn-search-img {
+    background: #444;
+    color: #ddd;
+  }
+
+  .btn-cancel-img {
+    background: #333;
+    color: #aaa;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     MODAL (Recipe Detail)
+     ───────────────────────────────────────────────────────────────────────── */
+  .modal-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.72);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-bg.open {
+    display: flex;
+  }
+
+  .modal {
+    background: white;
+    border-radius: 20px;
+    max-width: 740px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 600px) {
+    .modal {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .modal-img {
+    position: relative;
+    background: #e8e3db;
+  }
+
+  .modal-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px 0 0 20px;
+    min-height: 280px;
+    display: block;
+  }
+
+  @media (max-width: 600px) {
+    .modal-img img {
+      border-radius: 20px 20px 0 0;
+      min-height: 200px;
+    }
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+
+  .modal-content {
+    padding: 26px;
+    overflow-y: auto;
+  }
+
+  .modal-cuisine-tag {
+    display: inline-block;
+    padding: 3px 11px;
+    border-radius: 14px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    background: #f3f3f3;
+    color: #555;
+    margin-bottom: 8px;
+  }
+
+  .modal-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #111;
+    margin-bottom: 6px;
+  }
+
+  .modal-meta {
+    display: flex;
+    gap: 14px;
+    font-size: 0.79rem;
+    color: #999;
+    margin-bottom: 12px;
+  }
+
+  .modal-match {
+    display: inline-block;
+    padding: 3px 11px;
+    border-radius: 18px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+
+  .modal h4 {
+    font-size: 0.74rem;
+    font-weight: 800;
+    color: #bbb;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    margin-bottom: 7px;
+    margin-top: 14px;
+  }
+
+  .modal ul {
+    padding-left: 15px;
+    font-size: 0.85rem;
+    line-height: 1.8;
+    color: #444;
+  }
+
+  .modal ol {
+    padding-left: 15px;
+    font-size: 0.85rem;
+    line-height: 1.9;
+    color: #444;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     EMPTY STATE
+     ───────────────────────────────────────────────────────────────────────── */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: #ccc;
+  }
+
+  .empty-state .icon {
+    font-size: 3rem;
+    margin-bottom: 14px;
+  }
+
+  .empty-state p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
 </style>
 </head>
 <body>
@@ -214,12 +860,17 @@
 </div>
 
 <script>
-// ─── CONFIRMED IMAGE URLS ────────────────────────────────────────────────────
-// TheMealDB (verified live) and Wikimedia Commons (Special:FilePath redirects).
-// Any image that 404s gracefully falls back to a "click to add" placeholder.
+// ═══════════════════════════════════════════════════════════════════════════════
+// MEAL PREP - WORLD RECIPES APP
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── IMAGE SOURCES ────────────────────────────────────────────────────────────
+// TheMealDB (verified live) and Wikimedia Commons (Special:FilePath redirects)
+// Any image that 404s gracefully falls back to a "click to add" placeholder
 const M = "https://www.themealdb.com/images/media/meals/";
 const W = "https://upload.wikimedia.org/wikipedia/commons/thumb/";
 
+// ─── RECIPE DATABASE ──────────────────────────────────────────────────────────
 const RECIPES = [
   // AFRICAN
   { name:"Jollof Rice", cuisine:"African", time:"50 min", servings:6, difficulty:"Medium",
@@ -514,58 +1165,24 @@ const RECIPES = [
 
 const QUICK_ADDS = ["Chicken","Ground Beef","Lamb","Eggs","Tofu","Salmon","Shrimp","Rice","Pasta","Lentils","Chickpeas","Canned Beans","Potatoes","Plantain","Onion","Garlic","Ginger","Tomatoes","Spinach","Bell Pepper","Eggplant","Coconut Milk","Cheese","Butter","Olive Oil","Soy Sauce","Lemon","Lime","Cumin","Chili"];
 
-// ─── PERSISTENCE ──────────────────────────────────────────────────────────────
+// ─── STATE & PERSISTENCE ──────────────────────────────────────────────────────
 let myIngredients  = JSON.parse(localStorage.getItem('mealPrepIngredients')  || '[]');
 let deletedRecipes = new Set(JSON.parse(localStorage.getItem('deletedRecipes')  || '[]'));
 let customImages   = JSON.parse(localStorage.getItem('customImages')   || '{}');
-let lastResults = [], currentCuisine = 'All', currentMatchFilter = 'all', currentDisplayed = [];
+let lastResults    = [];
+let currentCuisine = 'All';
+let currentMatchFilter = 'all';
+let currentDisplayed = [];
 
+// ─── UTILITIES ────────────────────────────────────────────────────────────────
 function getImg(r) { return customImages[r.name] || r.img; }
 
-// ─── SIDEBAR ──────────────────────────────────────────────────────────────────
-const qc = document.getElementById('quickAdds');
-QUICK_ADDS.forEach(item => {
-  const btn = document.createElement('button');
-  btn.className = 'cat-btn'; btn.textContent = item;
-  btn.onclick = () => toggleIngredient(item.toLowerCase());
-  qc.appendChild(btn);
-});
-
-function renderSidebar() {
-  const list = document.getElementById('ingredientsList');
-  const sbtn = document.getElementById('suggestBtn');
-  if (!myIngredients.length) {
-    list.innerHTML = '<span class="empty-label">Nothing added yet</span>';
-    sbtn.disabled = true;
-  } else {
-    sbtn.disabled = false;
-    list.innerHTML = myIngredients.map(ing =>
-      `<div class="ingredient-tag">${ing}<button onclick="removeIngredient('${ing.replace(/'/g,"\\'")}')">×</button></div>`
-    ).join('');
-  }
-  document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', myIngredients.includes(b.textContent.toLowerCase())));
-  document.getElementById('restoreBtn').style.display = deletedRecipes.size ? 'block' : 'none';
+function save() {
+  localStorage.setItem('mealPrepIngredients', JSON.stringify(myIngredients));
+  renderSidebar();
 }
 
-function addIngredient() {
-  const inp = document.getElementById('ingredientInput');
-  inp.value.trim().toLowerCase().split(',').map(s=>s.trim()).filter(Boolean).forEach(v => { if (!myIngredients.includes(v)) myIngredients.push(v); });
-  inp.value = ''; save();
-}
-function toggleIngredient(n) { myIngredients = myIngredients.includes(n) ? myIngredients.filter(i=>i!==n) : [...myIngredients,n]; save(); }
-function removeIngredient(n) { myIngredients = myIngredients.filter(i=>i!==n); save(); }
-function clearAll() {
-  myIngredients = []; save(); lastResults = []; currentDisplayed = [];
-  document.getElementById('pinGrid').innerHTML = `<div class="empty-state"><div class="icon">🌍</div><p>Add ingredients on the left,<br>then tap <strong>Find Recipes</strong>.</p></div>`;
-  document.getElementById('resultsLabel').textContent = 'Add ingredients to get started';
-  document.getElementById('filterPills').style.display = 'none';
-  document.getElementById('cuisineRow').style.display = 'none';
-}
-function restoreDeleted() { deletedRecipes.clear(); localStorage.removeItem('deletedRecipes'); renderSidebar(); if (lastResults.length) applyFilters(); }
-function save() { localStorage.setItem('mealPrepIngredients', JSON.stringify(myIngredients)); renderSidebar(); }
-document.getElementById('ingredientInput').addEventListener('keydown', e => { if (e.key==='Enter') addIngredient(); });
-
-// ─── MATCHING ─────────────────────────────────────────────────────────────────
+// ─── MATCHING & FILTERING ────────────────────────────────────────────────────
 function matchRecipe(r) {
   const have = r.ingredients.filter(i => myIngredients.some(m => m.includes(i)||i.includes(m)));
   const need = r.ingredients.filter(i => !myIngredients.some(m => m.includes(i)||i.includes(m)));
@@ -573,9 +1190,14 @@ function matchRecipe(r) {
 }
 
 function suggestRecipes() {
-  lastResults = RECIPES.filter(r => !deletedRecipes.has(r.name))
-    .map(r => ({ ...r, ...matchRecipe(r) })).filter(r => r.pct > 0).sort((a,b) => b.pct - a.pct);
-  currentCuisine = 'All'; currentMatchFilter = 'all';
+  lastResults = RECIPES
+    .filter(r => !deletedRecipes.has(r.name))
+    .map(r => ({ ...r, ...matchRecipe(r) }))
+    .filter(r => r.pct > 0)
+    .sort((a,b) => b.pct - a.pct);
+  
+  currentCuisine = 'All';
+  currentMatchFilter = 'all';
   document.querySelectorAll('.filter-pill').forEach((b,i) => b.classList.toggle('active', i===0));
   document.querySelectorAll('.cuisine-pill').forEach((b,i) => b.classList.toggle('active', i===0));
   document.getElementById('filterPills').style.display = 'flex';
@@ -585,33 +1207,120 @@ function suggestRecipes() {
 
 function applyFilters() {
   let f = lastResults.filter(r => !deletedRecipes.has(r.name));
-  if (currentCuisine !== 'All') f = f.filter(r => r.cuisine === currentCuisine);
-  if (currentMatchFilter === 'high') f = f.filter(r => r.pct >= 0.85);
-  if (currentMatchFilter === 'med') f = f.filter(r => r.pct >= 0.5 && r.pct < 0.85);
+  
+  if (currentCuisine !== 'All') {
+    f = f.filter(r => r.cuisine === currentCuisine);
+  }
+  if (currentMatchFilter === 'high') {
+    f = f.filter(r => r.pct >= 0.85);
+  }
+  if (currentMatchFilter === 'med') {
+    f = f.filter(r => r.pct >= 0.5 && r.pct < 0.85);
+  }
+  
   currentDisplayed = f;
-  document.getElementById('resultsLabel').textContent = `${f.length} recipe${f.length!==1?'s':''} found${currentCuisine!=='All'?' · '+currentCuisine:''}`;
+  document.getElementById('resultsLabel').textContent = 
+    `${f.length} recipe${f.length!==1?'s':''} found${currentCuisine!=='All'?' · '+currentCuisine:''}`;
   renderPins(f);
 }
 
-// ─── RENDER CARDS ─────────────────────────────────────────────────────────────
-const heights = [170,195,215,180,205,190];
+// ─── SIDEBAR UI ───────────────────────────────────────────────────────────────
+function renderSidebar() {
+  const list = document.getElementById('ingredientsList');
+  const sbtn = document.getElementById('suggestBtn');
+  
+  if (!myIngredients.length) {
+    list.innerHTML = '<span class="empty-label">Nothing added yet</span>';
+    sbtn.disabled = true;
+  } else {
+    sbtn.disabled = false;
+    list.innerHTML = myIngredients.map(ing =>
+      `<div class="ingredient-tag">${ing}<button onclick="removeIngredient('${ing.replace(/'/g,"\\'")}')">×</button></div>`
+    ).join('');
+  }
+  
+  document.querySelectorAll('.cat-btn').forEach(b => 
+    b.classList.toggle('active', myIngredients.includes(b.textContent.toLowerCase()))
+  );
+  
+  document.getElementById('restoreBtn').style.display = deletedRecipes.size ? 'block' : 'none';
+}
+
+function addIngredient() {
+  const inp = document.getElementById('ingredientInput');
+  inp.value.trim().toLowerCase().split(',').map(s=>s.trim()).filter(Boolean).forEach(v => {
+    if (!myIngredients.includes(v)) myIngredients.push(v);
+  });
+  inp.value = '';
+  save();
+}
+
+function toggleIngredient(n) {
+  myIngredients = myIngredients.includes(n)
+    ? myIngredients.filter(i=>i!==n)
+    : [...myIngredients, n];
+  save();
+}
+
+function removeIngredient(n) {
+  myIngredients = myIngredients.filter(i=>i!==n);
+  save();
+}
+
+function clearAll() {
+  myIngredients = [];
+  save();
+  lastResults = [];
+  currentDisplayed = [];
+  document.getElementById('pinGrid').innerHTML = 
+    `<div class="empty-state"><div class="icon">🌍</div><p>Add ingredients on the left,<br>then tap <strong>Find Recipes</strong>.</p></div>`;
+  document.getElementById('resultsLabel').textContent = 'Add ingredients to get started';
+  document.getElementById('filterPills').style.display = 'none';
+  document.getElementById('cuisineRow').style.display = 'none';
+}
+
+function restoreDeleted() {
+  deletedRecipes.clear();
+  localStorage.removeItem('deletedRecipes');
+  renderSidebar();
+  if (lastResults.length) applyFilters();
+}
+
+// ─── QUICK ADDS INITIALIZATION ────────────────────────────────────────────────
+const qc = document.getElementById('quickAdds');
+QUICK_ADDS.forEach(item => {
+  const btn = document.createElement('button');
+  btn.className = 'cat-btn';
+  btn.textContent = item;
+  btn.onclick = () => toggleIngredient(item.toLowerCase());
+  qc.appendChild(btn);
+});
+
+// ─── PIN CARD RENDERING ───────────────────────────────────────────────────────
+const CARD_HEIGHTS = [170, 195, 215, 180, 205, 190];
+
 function renderPins(recipes) {
   const grid = document.getElementById('pinGrid');
+  
   if (!recipes.length) {
-    grid.innerHTML = `<div class="empty-state"><div class="icon">🤔</div><p>No matches with these filters.<br>Try a different cuisine or add more ingredients.</p></div>`;
+    grid.innerHTML = 
+      `<div class="empty-state"><div class="icon">🤔</div><p>No matches with these filters.<br>Try a different cuisine or add more ingredients.</p></div>`;
     return;
   }
+  
   grid.innerHTML = recipes.map((r, idx) => {
-    const rc = r.pct>=0.85?'ribbon-high':r.pct>=0.5?'ribbon-med':'ribbon-low';
-    const rt = r.pct>=0.85?'✅ Ready to cook':r.pct>=0.5?'🟡 Almost there':'🛒 Need a few';
+    const rc = r.pct >= 0.85 ? 'ribbon-high' : r.pct >= 0.5 ? 'ribbon-med' : 'ribbon-low';
+    const rt = r.pct >= 0.85 ? '✅ Ready to cook' : r.pct >= 0.5 ? '🟡 Almost there' : '🛒 Need a few';
     const imgUrl = getImg(r);
     const nameEsc = r.name.replace(/'/g,"\\'").replace(/"/g,"&quot;");
+    const height = CARD_HEIGHTS[idx % CARD_HEIGHTS.length];
+    
     return `
     <div class="pin-card" id="card-${idx}" data-name="${nameEsc}">
-      <div class="pin-img-wrap" style="min-height:${heights[idx%heights.length]}px" onclick="openModal(${idx})">
-        <img src="${imgUrl}" alt="${r.name}" loading="lazy" style="min-height:${heights[idx%heights.length]}px"
+      <div class="pin-img-wrap" style="min-height:${height}px" onclick="openModal(${idx})">
+        <img src="${imgUrl}" alt="${r.name}" loading="lazy" style="min-height:${height}px"
           onerror="this.style.display='none'; this.nextElementSibling && (this.nextElementSibling.style.display='flex')" />
-        <div class="img-placeholder" style="display:none;min-height:${heights[idx%heights.length]}px" onclick="openImgEditor(event,${idx})">
+        <div class="img-placeholder" style="display:none;min-height:${height}px" onclick="openImgEditor(event,${idx})">
           <span class="ph-icon">📷</span><span>No image — click to add</span>
         </div>
         <div class="card-actions">
@@ -620,7 +1329,6 @@ function renderPins(recipes) {
         </div>
         <div class="match-ribbon ${rc}">${rt}</div>
         <div class="cuisine-flag">${r.cuisine}</div>
-        <!-- inline image editor -->
         <div class="img-editor" id="editor-${idx}">
           <label>Paste image URL or search online:</label>
           <input type="text" id="imgUrl-${idx}" placeholder="https://..." value="${imgUrl.startsWith('https://upload.wikimedia') || imgUrl.startsWith('https://www.themealdb') ? '' : imgUrl}" />
@@ -643,92 +1351,137 @@ function renderPins(recipes) {
   }).join('');
 }
 
-// ─── DELETE ──────────────────────────────────────────────────────────────────
+// ─── CARD INTERACTIONS ────────────────────────────────────────────────────────
 function deleteCard(e, idx) {
   e.stopPropagation();
   const r = currentDisplayed[idx];
   if (!r) return;
+  
   deletedRecipes.add(r.name);
   localStorage.setItem('deletedRecipes', JSON.stringify([...deletedRecipes]));
+  
   // Animate out
-  const card = document.getElementById('card-'+idx);
-  if (card) { card.style.opacity='0'; card.style.transform='scale(0.9)'; card.style.transition='all .25s'; setTimeout(()=>applyFilters(),260); }
+  const card = document.getElementById('card-' + idx);
+  if (card) {
+    card.style.opacity = '0';
+    card.style.transform = 'scale(0.9)';
+    card.style.transition = 'all .25s';
+    setTimeout(() => applyFilters(), 260);
+  }
+  
   renderSidebar();
 }
 
-// ─── IMAGE EDITOR ─────────────────────────────────────────────────────────────
+// ─── IMAGE EDITING ────────────────────────────────────────────────────────────
 function openImgEditor(e, idx) {
   e.stopPropagation();
   // Close any other open editors first
   document.querySelectorAll('.img-editor.open').forEach(el => el.classList.remove('open'));
-  const editor = document.getElementById('editor-'+idx);
+  
+  const editor = document.getElementById('editor-' + idx);
   if (editor) {
     editor.classList.add('open');
-    // Pre-fill with current custom image if any
     const r = currentDisplayed[idx];
     if (r && customImages[r.name]) {
-      document.getElementById('imgUrl-'+idx).value = customImages[r.name];
+      document.getElementById('imgUrl-' + idx).value = customImages[r.name];
     }
-    document.getElementById('imgUrl-'+idx).focus();
+    document.getElementById('imgUrl-' + idx).focus();
   }
-}
-function closeImgEditor(e, idx) {
-  e.stopPropagation();
-  const editor = document.getElementById('editor-'+idx);
-  if (editor) editor.classList.remove('open');
-}
-function saveImg(e, idx) {
-  e.stopPropagation();
-  const r = currentDisplayed[idx]; if (!r) return;
-  const url = document.getElementById('imgUrl-'+idx).value.trim();
-  if (url) {
-    customImages[r.name] = url;
-    localStorage.setItem('customImages', JSON.stringify(customImages));
-  } else {
-    delete customImages[r.name];
-    localStorage.setItem('customImages', JSON.stringify(customImages));
-  }
-  applyFilters(); // re-render with new image
-}
-function searchImg(e, name) {
-  e.stopPropagation();
-  window.open('https://www.google.com/search?tbm=isch&q='+encodeURIComponent(name+' food dish recipe'), '_blank');
 }
 
-// ─── MODAL ───────────────────────────────────────────────────────────────────
+function closeImgEditor(e, idx) {
+  e.stopPropagation();
+  const editor = document.getElementById('editor-' + idx);
+  if (editor) editor.classList.remove('open');
+}
+
+function saveImg(e, idx) {
+  e.stopPropagation();
+  const r = currentDisplayed[idx];
+  if (!r) return;
+  
+  const url = document.getElementById('imgUrl-' + idx).value.trim();
+  if (url) {
+    customImages[r.name] = url;
+  } else {
+    delete customImages[r.name];
+  }
+  
+  localStorage.setItem('customImages', JSON.stringify(customImages));
+  applyFilters(); // re-render with new image
+}
+
+function searchImg(e, name) {
+  e.stopPropagation();
+  window.open('https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(name + ' food dish recipe'), '_blank');
+}
+
+// ─── MODAL (RECIPE DETAIL) ────────────────────────────────────────────────────
 function openModal(idx) {
-  const r = currentDisplayed[idx]; if (!r) return;
+  const r = currentDisplayed[idx];
+  if (!r) return;
+  
   // Close any image editors first
   document.querySelectorAll('.img-editor.open').forEach(el => el.classList.remove('open'));
-  const mc = r.pct>=0.85?'#22c55e':r.pct>=0.5?'#eab308':'#ef4444';
-  const mt = r.pct>=0.85?'✅ Ready to cook':r.pct>=0.5?'🟡 Almost there':'🛒 Need a few things';
+  
+  const mc = r.pct >= 0.85 ? '#22c55e' : r.pct >= 0.5 ? '#eab308' : '#ef4444';
+  const mt = r.pct >= 0.85 ? '✅ Ready to cook' : r.pct >= 0.5 ? '🟡 Almost there' : '🛒 Need a few things';
+  
   const modalImg = document.getElementById('modalImg');
   modalImg.style.display = 'block';
   modalImg.src = getImg(r);
   modalImg.alt = r.name;
+  
   document.getElementById('modalCuisine').textContent = r.cuisine;
   document.getElementById('modalTitle').textContent = r.name;
-  document.getElementById('modalMeta').innerHTML = `<span>⏱ ${r.time}</span><span>👥 ${r.servings} servings</span><span>📊 ${r.difficulty}</span>`;
+  document.getElementById('modalMeta').innerHTML = 
+    `<span>⏱ ${r.time}</span><span>👥 ${r.servings} servings</span><span>📊 ${r.difficulty}</span>`;
   document.getElementById('modalMatchBadge').textContent = mt;
-  document.getElementById('modalMatchBadge').style.cssText = `background:${mc}22;color:${r.pct>=0.85?'#15803d':r.pct>=0.5?'#a16207':'#b91c1c'}`;
-  document.getElementById('modalIngredients').innerHTML = r.allIngredients.map(i=>`<li>${i}</li>`).join('');
-  document.getElementById('modalSteps').innerHTML = r.steps.map(s=>`<li>${s}</li>`).join('');
+  document.getElementById('modalMatchBadge').style.cssText = 
+    `background:${mc}22;color:${r.pct >= 0.85 ? '#15803d' : r.pct >= 0.5 ? '#a16207' : '#b91c1c'}`;
+  document.getElementById('modalIngredients').innerHTML = r.allIngredients.map(i => `<li>${i}</li>`).join('');
+  document.getElementById('modalSteps').innerHTML = r.steps.map(s => `<li>${s}</li>`).join('');
   document.getElementById('modalBg').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
-function closeModalDirect() { document.getElementById('modalBg').classList.remove('open'); document.body.style.overflow=''; }
-function closeModal(e) { if (e.target===document.getElementById('modalBg')) closeModalDirect(); }
 
-function setCuisine(c,btn) { currentCuisine=c; document.querySelectorAll('.cuisine-pill').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); applyFilters(); }
-function setFilter(f,btn) { currentMatchFilter=f; document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); applyFilters(); }
+function closeModalDirect() {
+  document.getElementById('modalBg').classList.remove('open');
+  document.body.style.overflow = '';
+}
 
-// Close editors when clicking outside
+function closeModal(e) {
+  if (e.target === document.getElementById('modalBg')) closeModalDirect();
+}
+
+// ─── FILTER CONTROLS ──────────────────────────────────────────────────────────
+function setCuisine(c, btn) {
+  currentCuisine = c;
+  document.querySelectorAll('.cuisine-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function setFilter(f, btn) {
+  currentMatchFilter = f;
+  document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+// ─── EVENT LISTENERS ──────────────────────────────────────────────────────────
+document.getElementById('ingredientInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addIngredient();
+});
+
+// Close image editors when clicking outside
 document.addEventListener('click', e => {
   if (!e.target.closest('.img-editor') && !e.target.closest('.btn-img') && !e.target.closest('.img-placeholder')) {
-    document.querySelectorAll('.img-editor.open').forEach(el=>el.classList.remove('open'));
+    document.querySelectorAll('.img-editor.open').forEach(el => el.classList.remove('open'));
   }
 });
 
+// ─── INITIALIZATION ───────────────────────────────────────────────────────────
 renderSidebar();
 if (myIngredients.length) suggestRecipes();
 </script>
